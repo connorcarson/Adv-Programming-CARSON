@@ -9,7 +9,7 @@ public abstract class Player
     }
 
     protected Team team;
-    protected GameObject player;
+    public GameObject playerObject;
     private const float speed = 1.0f;
 
     public void Update()
@@ -20,7 +20,7 @@ public abstract class Player
     private void MoveTowards(Vector3 direction)
     {
         var speedMultiplier = speed * Time.deltaTime;
-        player.transform.position += direction * speedMultiplier;
+        playerObject.transform.position += direction * speedMultiplier;
     }
     
     protected virtual Vector3 Direction()
@@ -35,7 +35,7 @@ public abstract class Player
             ? Resources.Load<Material>("Materials/BlueMat")
             : Resources.Load<Material>("Materials/OrangeMat");
 
-        var renderer = player.GetComponent<Renderer>();
+        var renderer = playerObject.GetComponent<Renderer>();
         renderer.material = teamMat;
     }
 }
@@ -48,10 +48,10 @@ public class UserPlayer : Player
     {
         var direction = new Vector3();
         
-        if (Input.GetKey(_movementKeys[0])) direction += player.transform.forward;
-        if (Input.GetKey(_movementKeys[1])) direction += -player.transform.right;
-        if (Input.GetKey(_movementKeys[2])) direction += -player.transform.forward;
-        if (Input.GetKey(_movementKeys[3])) direction += player.transform.right;
+        if (Input.GetKey(_movementKeys[0])) direction += playerObject.transform.forward;
+        if (Input.GetKey(_movementKeys[1])) direction += -playerObject.transform.right;
+        if (Input.GetKey(_movementKeys[2])) direction += -playerObject.transform.forward;
+        if (Input.GetKey(_movementKeys[3])) direction += playerObject.transform.right;
 
         return direction;
     }
@@ -64,9 +64,9 @@ public class UserPlayer : Player
         _movementKeys[3] = right;
     }
 
-    public UserPlayer(GameObject playerGameObject, Team teamAssignment)
+    public UserPlayer(GameObject playerObjectGameObject, Team teamAssignment)
     {
-        player = playerGameObject;
+        playerObject = playerObjectGameObject;
         team = teamAssignment;
         AssignTeamColor(team);
     }
@@ -76,12 +76,12 @@ public class AIPlayer : Player
 { 
     protected override Vector3 Direction()
     {
-        return ServicesLocator.Ball.transform.position - player.transform.position;
+        return ServicesLocator.Ball.transform.position - playerObject.transform.position;
     }
 
-    public AIPlayer(GameObject playerGameObject, Team teamAssignment)
+    public AIPlayer(GameObject playerObjectGameObject, Team teamAssignment)
     {
-        player = playerGameObject;
+        playerObject = playerObjectGameObject;
         team = teamAssignment;
         AssignTeamColor(team);
     }

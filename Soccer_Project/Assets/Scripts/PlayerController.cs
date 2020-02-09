@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerController
 {
-    private List<Player> _players;
+    public List<Player> _players;
     private int _numberOfPlayers = 2;
     public void Initialize()
     {
