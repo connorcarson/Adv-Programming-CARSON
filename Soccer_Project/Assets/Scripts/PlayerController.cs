@@ -23,19 +23,22 @@ public class PlayerController
     private void GeneratePlayers()
     {
         var userObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/AI_Player"));
+        userObject.transform.position = new Vector3(Random.Range(-8, 8), userObject.transform.position.y,Random.Range(-4, 4));
         var userPlayer = new UserPlayer(userObject, Player.Team.Blue);
-        userPlayer.AssignKeys(KeyCode.K, KeyCode.K, KeyCode.K, KeyCode.K);
+        userPlayer.AssignKeys(KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D);
         _players.Add(userPlayer);
         
         for (var i = 0; i < _numberOfPlayers - 1; i++)
         {
             var aiObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/AI_Player"));
+            aiObject.transform.position = new Vector3(Random.Range(-8, 8), aiObject.transform.position.y, Random.Range(-4, 4));
             _players.Add(new AIPlayer(aiObject, Player.Team.Blue));
         }
 
         for (var i = 0; i < _numberOfPlayers; i++)
         {
             var aiObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/AI_Player"));
+            aiObject.transform.position = new Vector3(Random.Range(-8, 8), aiObject.transform.position.y, Random.Range(-4, 4));
             _players.Add(new AIPlayer(aiObject, Player.Team.Orange));
         }
     }
