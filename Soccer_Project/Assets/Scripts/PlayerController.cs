@@ -6,7 +6,7 @@ public class PlayerController
 {
     public List<Player> _players;
     private int _numberOfPlayers = 2;
-    public void Initialize()
+    public void Initialize(AGPEvent e)
     {
         _players = new List<Player>();
         GeneratePlayers();

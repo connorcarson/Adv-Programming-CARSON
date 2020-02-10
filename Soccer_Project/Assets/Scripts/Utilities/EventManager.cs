@@ -67,6 +67,11 @@ public abstract class AGPEvent
     public delegate void Handler (AGPEvent e);
 }
 
+public class GameStarted : AGPEvent
+{
+    public GameStarted() { }
+}
+
 public class GoalScored: AGPEvent
 {
     public bool blueTeam;
@@ -75,5 +80,10 @@ public class GoalScored: AGPEvent
     {
         this.blueTeam = blueTeam;
     }
+}
+
+public class GameWon : AGPEvent
+{
+    public GameWon() { }
 }
 
