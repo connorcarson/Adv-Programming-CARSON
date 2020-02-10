@@ -73,7 +73,8 @@ public class UserPlayer : Player
 }
 
 public class AIPlayer : Player
-{ 
+{
+    private FiniteStateMachine<AIPlayer> _AIPlayerStateMachine;
     protected override Vector3 Direction()
     {
         var direction = ServicesLocator.Ball.transform.position - playerObject.transform.position;

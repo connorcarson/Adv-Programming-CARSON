@@ -9,11 +9,8 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         ServicesLocator.GameManager = this;
-        
         ServicesLocator.EventManager = new EventManager();
-        
         ServicesLocator.PlayerManager = new PlayerController();
-
         ServicesLocator.BoundaryController = new Boundaries();
     }
 
