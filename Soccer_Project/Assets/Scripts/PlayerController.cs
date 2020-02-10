@@ -36,7 +36,7 @@ public class PlayerController
     {
         var userObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/Player"));
         
-        var userPlayer = new UserPlayer(userObject, Player.Team.Blue);
+        var userPlayer = new UserPlayer(userObject, Player.Team.Blue, 1.5f);
         userPlayer.SetPosition();
         userPlayer.AssignKeys(KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D);
         _players.Add(userPlayer);
@@ -45,7 +45,7 @@ public class PlayerController
         {
             var aiObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/Player"));
             
-            var aiPlayer = new AIPlayer(aiObject, Player.Team.Blue);
+            var aiPlayer = new AIPlayer(aiObject, Player.Team.Blue, 0.8f);
             aiPlayer.SetPosition();
             _players.Add(aiPlayer);
         }
@@ -54,7 +54,7 @@ public class PlayerController
         {
             var aiObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/Player"));
 
-            var aiPlayer = new AIPlayer(aiObject, Player.Team.Orange);
+            var aiPlayer = new AIPlayer(aiObject, Player.Team.Orange, 0.8f);
             aiPlayer.SetPosition();
             _players.Add(aiPlayer);
         }

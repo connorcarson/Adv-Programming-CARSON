@@ -10,7 +10,7 @@ public abstract class Player
 
     protected Team team;
     public GameObject playerObject;
-    private const float speed = 1.0f;
+    public float speed = 1.0f;
 
     public virtual void Initialize() { }
 
@@ -71,10 +71,11 @@ public class UserPlayer : Player
         _movementKeys[3] = right;
     }
 
-    public UserPlayer(GameObject playerObjectGameObject, Team teamAssignment)
+    public UserPlayer(GameObject playerObjectGameObject, Team teamAssignment, float playerSpeed)
     {
         playerObject = playerObjectGameObject;
         team = teamAssignment;
+        speed = playerSpeed;
         AssignTeamColor(team);
     }
 }
@@ -104,10 +105,11 @@ public class AIPlayer : Player
     //    if(distance < 0.1f) _AIPlayerStateMachine.TransitionTo<FiniteStateMachine<AIPlayer>.HasBall>();
     //}
 
-    public AIPlayer(GameObject playerObjectGameObject, Team teamAssignment)
+    public AIPlayer(GameObject playerObjectGameObject, Team teamAssignment, float aiSpeed)
     {
         playerObject = playerObjectGameObject;
         team = teamAssignment;
+        speed = aiSpeed;
         AssignTeamColor(team);
         //_AIPlayerStateMachine = new FiniteStateMachine<AIPlayer>(this);
     }
