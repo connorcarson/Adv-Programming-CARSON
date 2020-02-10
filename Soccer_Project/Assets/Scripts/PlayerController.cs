@@ -11,6 +11,8 @@ public class PlayerController
         _players = new List<Player>();
         GeneratePlayers();
 
+        ServicesLocator.EventManager.Register<GoalScored>(ResetPlayers);
+        
         //foreach (var player in _players)
         //{
         //    player.Initialize();
@@ -25,26 +27,44 @@ public class PlayerController
         }
     }
 
+    public void OnDestroy()
+    {
+        ServicesLocator.EventManager.Unregister<GoalScored>(ResetPlayers);
+    }
+
     private void GeneratePlayers()
     {
         var userObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/Player"));
-        userObject.transform.position = new Vector3(Random.Range(-8, 8), userObject.transform.position.y,Random.Range(-4, 4));
+        
         var userPlayer = new UserPlayer(userObject, Player.Team.Blue);
+        userPlayer.SetPosition();
         userPlayer.AssignKeys(KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D);
         _players.Add(userPlayer);
         
         for (var i = 0; i < _numberOfPlayers - 1; i++)
         {
             var aiObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/Player"));
-            aiObject.transform.position = new Vector3(Random.Range(-8, 8), aiObject.transform.position.y, Random.Range(-4, 4));
-            _players.Add(new AIPlayer(aiObject, Player.Team.Blue));
+            
+            var aiPlayer = new AIPlayer(aiObject, Player.Team.Blue);
+            aiPlayer.SetPosition();
+            _players.Add(aiPlayer);
         }
 
         for (var i = 0; i < _numberOfPlayers; i++)
         {
             var aiObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/Player"));
-            aiObject.transform.position = new Vector3(Random.Range(-8, 8), aiObject.transform.position.y, Random.Range(-4, 4));
-            _players.Add(new AIPlayer(aiObject, Player.Team.Orange));
+
+            var aiPlayer = new AIPlayer(aiObject, Player.Team.Orange);
+            aiPlayer.SetPosition();
+            _players.Add(aiPlayer);
+        }
+    }
+
+    private void ResetPlayers(AGPEvent e)
+    {
+        foreach (var player in _players)
+        {
+            player.SetPosition();
         }
     }
 }

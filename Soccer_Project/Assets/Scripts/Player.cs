@@ -14,7 +14,7 @@ public abstract class Player
 
     public virtual void Initialize() { }
 
-    public virtual void Update()
+    public void Update()
     {
         MoveTowards(Direction());
     }
@@ -39,6 +39,11 @@ public abstract class Player
 
         var renderer = playerObject.GetComponent<Renderer>();
         renderer.material = teamMat;
+    }
+
+    public void SetPosition()
+    {
+        playerObject.transform.position = new Vector3(Random.Range(-8, 8), playerObject.transform.position.y, Random.Range(-4, 4));
     }
 }
 
