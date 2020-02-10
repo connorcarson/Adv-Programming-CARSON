@@ -6,9 +6,11 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         ServicesLocator.GameManager = this;
+        
+        ServicesLocator.EventManager = new EventManager();
         
         ServicesLocator.PlayerManager = new PlayerController();
         ServicesLocator.PlayerManager.Initialize();

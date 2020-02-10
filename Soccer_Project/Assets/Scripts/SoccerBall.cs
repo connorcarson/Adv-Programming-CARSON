@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,5 +9,13 @@ public class SoccerBall : MonoBehaviour
     void Awake()
     {
         ServicesLocator.Ball = this;
+    }
+
+    public void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Goal")) {
+            Debug.Log("GOAL!");
+            ServicesLocator.EventManager.Fire(new GoalScored(true));
+        }
     }
 }
