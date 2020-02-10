@@ -69,11 +69,11 @@ public abstract class AGPEvent
 
 public class GoalScored: AGPEvent
 {
-    private bool team;
+    public bool blueTeam;
 
-    public GoalScored(bool teamScored)
+    public GoalScored(bool blueTeam)
     {
-        this.team = teamScored;
+        this.blueTeam = blueTeam;
     }
 }
 

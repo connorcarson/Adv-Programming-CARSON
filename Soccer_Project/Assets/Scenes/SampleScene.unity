@@ -4545,7 +4545,7 @@ GameObject:
   - component: {fileID: 1364500114}
   - component: {fileID: 1364500115}
   m_Layer: 0
-  m_Name: Goal_Collider
+  m_Name: Blue_Goal
   m_TagString: Goal
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4711,7 +4711,7 @@ GameObject:
   - component: {fileID: 1480336046}
   - component: {fileID: 1480336047}
   m_Layer: 0
-  m_Name: Goal_Collider
+  m_Name: Orange_Goal
   m_TagString: Goal
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

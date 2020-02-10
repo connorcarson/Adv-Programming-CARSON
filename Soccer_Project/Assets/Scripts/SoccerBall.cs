@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class SoccerBall : MonoBehaviour
 {
+    public GoalScored goalScored;
     // Start is called before the first frame update
     void Awake()
     {
@@ -14,8 +15,8 @@ public class SoccerBall : MonoBehaviour
     public void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Goal")) {
-            Debug.Log("GOAL!");
-            ServicesLocator.EventManager.Fire(new GoalScored(true));
+            goalScored = new GoalScored(other.name == "Blue_Goal");
+            ServicesLocator.EventManager.Fire(goalScored);
         }
     }
 }
