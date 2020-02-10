@@ -9,7 +9,12 @@ public class PlayerController
     public void Initialize()
     {
         _players = new List<Player>();
-        GeneratePlayers();   
+        GeneratePlayers();
+
+        //foreach (var player in _players)
+        //{
+        //    player.Initialize();
+        //}
     }
 
     public void Update()

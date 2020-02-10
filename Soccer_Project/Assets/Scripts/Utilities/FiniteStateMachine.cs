@@ -127,4 +127,25 @@ public class FiniteStateMachine<TContext>
 		
 		public virtual void BoardCompleted() { }
 	}
+
+	public abstract class ChaseBall : FiniteStateMachine<AIPlayer>.State
+	{
+		public override void OnEnter() { }
+		
+		public override void OnExit() { }
+
+		public override void Update() { }
+	}
+	
+	public abstract class HasBall : FiniteStateMachine<AIPlayer>.State
+	{
+		public override void OnEnter()
+		{
+			ServicesLocator.Ball.transform.SetParent(this.Context.playerObject.transform);
+		}
+		
+		public override void OnExit() { }
+
+		public override void Update() { }
+	}
 }

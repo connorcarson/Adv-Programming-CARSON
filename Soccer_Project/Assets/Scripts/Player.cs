@@ -12,7 +12,9 @@ public abstract class Player
     public GameObject playerObject;
     private const float speed = 1.0f;
 
-    public void Update()
+    public virtual void Initialize() { }
+
+    public virtual void Update()
     {
         MoveTowards(Direction());
     }
@@ -74,18 +76,35 @@ public class UserPlayer : Player
 
 public class AIPlayer : Player
 {
-    private FiniteStateMachine<AIPlayer> _AIPlayerStateMachine;
+    //I don't think this goes here
+    //private FiniteStateMachine<AIPlayer> _AIPlayerStateMachine;
     protected override Vector3 Direction()
     {
         var direction = ServicesLocator.Ball.transform.position - playerObject.transform.position;
         return direction.normalized;
     }
 
+    //Attempted to utilize state machine here
+    //public override void Initialize()
+    //{
+    //    _AIPlayerStateMachine.TransitionTo<FiniteStateMachine<AIPlayer>.ChaseBall>();
+    //}
+    
+    //public override void Update()
+    //{
+    //    base.Update();
+    //    _AIPlayerStateMachine.Update();
+    
+    //    var distance = (ServicesLocator.Ball.transform.position - playerObject.transform.position).magnitude;
+    //    if(distance < 0.1f) _AIPlayerStateMachine.TransitionTo<FiniteStateMachine<AIPlayer>.HasBall>();
+    //}
+
     public AIPlayer(GameObject playerObjectGameObject, Team teamAssignment)
     {
         playerObject = playerObjectGameObject;
         team = teamAssignment;
         AssignTeamColor(team);
+        //_AIPlayerStateMachine = new FiniteStateMachine<AIPlayer>(this);
     }
 }
 
