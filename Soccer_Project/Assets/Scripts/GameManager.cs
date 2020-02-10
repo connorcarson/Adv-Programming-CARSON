@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    // Start is called before the first frame update
     void Awake()
     {
         ServicesLocator.GameManager = this;
@@ -13,9 +13,13 @@ public class GameManager : MonoBehaviour
         ServicesLocator.EventManager = new EventManager();
         
         ServicesLocator.PlayerManager = new PlayerController();
-        ServicesLocator.PlayerManager.Initialize();
-        
+
         ServicesLocator.BoundaryController = new Boundaries();
+    }
+
+    private void Start()
+    {
+        ServicesLocator.PlayerManager.Initialize();
         ServicesLocator.BoundaryController.Initialize();
     }
 

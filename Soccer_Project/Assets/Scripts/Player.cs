@@ -76,7 +76,8 @@ public class AIPlayer : Player
 { 
     protected override Vector3 Direction()
     {
-        return ServicesLocator.Ball.transform.position - playerObject.transform.position;
+        var direction = ServicesLocator.Ball.transform.position - playerObject.transform.position;
+        return direction.normalized;
     }
 
     public AIPlayer(GameObject playerObjectGameObject, Team teamAssignment)

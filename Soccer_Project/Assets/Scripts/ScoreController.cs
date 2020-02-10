@@ -1,27 +1,40 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using TMPro;
 using UnityEngine;
 
 public class ScoreController : MonoBehaviour
 {
-    private int blueTeamScore;
-    private int orangeTeamScore;
+    public TextMeshProUGUI blueScoreTMP;
+    public TextMeshProUGUI orangeScoreTMP;
+    
+    private int _blueTeamScore;
+    private int _orangeTeamScore;
 
     private void Start()
     {
-        ServicesLocator.EventManager.Register<GoalScored>(e => IncrementScore(ServicesLocator.Ball.goalScored, ServicesLocator.Ball.goalScored.blueTeam));
+        ServicesLocator.ScoreController = this;
+        
+        ServicesLocator.EventManager.Register<GoalScored>(e => IncrementScore(ServicesLocator.Ball.goalScored.blueTeam));
     }
 
     private void Update()
     {
-        Debug.Log(blueTeamScore);
-        Debug.Log(orangeTeamScore);
+        UpdateScoreUI();
     }
 
-    private void IncrementScore(AGPEvent e, bool blueTeam)
+    private void OnDestroy()
     {
-        if (blueTeam) blueTeamScore++;
-        else orangeTeamScore++;
+        ServicesLocator.EventManager.Unregister<GoalScored>(e => IncrementScore(ServicesLocator.Ball.goalScored.blueTeam));
+    }
+
+    private void UpdateScoreUI()
+    {
+        blueScoreTMP.text = "blue: " + _blueTeamScore;
+        orangeScoreTMP.text = "orange: " + _orangeTeamScore;
+    }
+    
+    private void IncrementScore(bool blueTeam)
+    {
+        if (blueTeam) _blueTeamScore++;
+        else _orangeTeamScore++;
     }
 }
