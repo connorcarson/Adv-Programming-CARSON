@@ -96,6 +96,7 @@ public class UserPlayer : Player
 
 public class AIPlayer : Player
 {
+    private BehaviorTree.Tree<AIPlayer> _tree;
     public override Vector3 Direction()
     {
         var direction = ServicesLocator.Ball.transform.position - playerObject.transform.position;
@@ -109,7 +110,17 @@ public class AIPlayer : Player
         this.speed = speed;
         AssignTeamColor(team);
     }
+
+    public class ChaseBall : BehaviorTree.Node<AIPlayer>
+    {
+        public override bool Update(AIPlayer context)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
+
+
 
 public class Referee : Player
 {
