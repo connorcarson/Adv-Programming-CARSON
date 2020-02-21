@@ -1,11 +1,14 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using Random = UnityEngine.Random;
 
 public abstract class Player
 {
     public enum Team
     {
         Blue,
-        Orange
+        Orange,
+        Referee
     }
 
     protected Team team;
@@ -33,15 +36,30 @@ public abstract class Player
     protected void AssignTeamColor(Team team)
     {
         //tried using conditional ref expression because rider suggested it - it is weird/confusing, but cleaner.
-        var teamMat = (team == Team.Blue)
-            ? Resources.Load<Material>("Materials/BlueMat")
-            : Resources.Load<Material>("Materials/OrangeMat");
+        //var teamMat = (team == Team.Blue)
+        //    ? Resources.Load<Material>("Materials/BlueMat")
+        //    : Resources.Load<Material>("Materials/OrangeMat");
+        Material teamMat;
+        switch (team)
+        {
+            case Team.Blue:
+                teamMat = Resources.Load<Material>("Materials/BlueMat");
+                break;
+            case Team.Orange:
+                teamMat = Resources.Load<Material>("Materials/OrangeMat");
+                break;
+            case Team.Referee:
+                teamMat = Resources.Load<Material>("Materials/RedMat");
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
 
         var renderer = playerObject.GetComponent<Renderer>();
         renderer.material = teamMat;
     }
 
-    public void SetPosition()
+    public virtual void SetPosition()
     {
         playerObject.transform.position = new Vector3(Random.Range(-8, 8), playerObject.transform.position.y, Random.Range(-4, 4));
     }
@@ -82,36 +100,39 @@ public class UserPlayer : Player
 
 public class AIPlayer : Player
 {
-    //I don't think this goes here
-    //private FiniteStateMachine<AIPlayer> _AIPlayerStateMachine;
     protected override Vector3 Direction()
     {
         var direction = ServicesLocator.Ball.transform.position - playerObject.transform.position;
         return direction.normalized;
     }
 
-    //Attempted to utilize state machine here
-    //public override void Initialize()
-    //{
-    //    _AIPlayerStateMachine.TransitionTo<FiniteStateMachine<AIPlayer>.ChaseBall>();
-    //}
-    
-    //public override void Update()
-    //{
-    //    base.Update();
-    //    _AIPlayerStateMachine.Update();
-    
-    //    var distance = (ServicesLocator.Ball.transform.position - playerObject.transform.position).magnitude;
-    //    if(distance < 0.1f) _AIPlayerStateMachine.TransitionTo<FiniteStateMachine<AIPlayer>.HasBall>();
-    //}
-
-    public AIPlayer(GameObject playerObjectGameObject, Team teamAssignment, float aiSpeed)
+    public AIPlayer(GameObject playerObjectGameObject, Team teamAssignment, float speed)
     {
         playerObject = playerObjectGameObject;
         team = teamAssignment;
-        speed = aiSpeed;
+        this.speed = speed;
         AssignTeamColor(team);
-        //_AIPlayerStateMachine = new FiniteStateMachine<AIPlayer>(this);
     }
 }
 
+public class Referee : Player
+{
+    protected override Vector3 Direction()
+    {
+        var direction = ServicesLocator.Ball.transform.position - (playerObject.transform.position - Vector3.one);
+        return direction.normalized;
+    }
+    
+    public override void SetPosition()
+    {
+        playerObject.transform.position = new Vector3(0, playerObject.transform.position.y, 1);
+    }
+
+    public Referee(GameObject playerObjectGameObject, Team teamAssignment, float speed)
+    {
+        playerObject = playerObjectGameObject;
+        team = teamAssignment;
+        this.speed = speed;
+        AssignTeamColor(team);
+    }
+}

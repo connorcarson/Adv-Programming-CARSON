@@ -58,6 +58,12 @@ public class PlayerController
             aiPlayer.SetPosition();
             _players.Add(aiPlayer);
         }
+
+        var refereeObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/Player"));
+        
+        var refereePlayer = new Referee(refereeObject, Player.Team.Referee, 1.5f);
+        refereePlayer.SetPosition();
+        _players.Add(refereePlayer);
     }
 
     private void ResetPlayers(AGPEvent e)
