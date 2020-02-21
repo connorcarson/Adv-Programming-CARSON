@@ -20,7 +20,7 @@ public abstract class Player
 
     public virtual void Update()
     {
-        //MoveTowards(Direction());
+        LookAtBall();
     }
 
     public void MoveTowards(Vector3 direction)
@@ -34,6 +34,20 @@ public abstract class Player
         return new Vector3();
     }
 
+    protected virtual void LookAtBall()
+    {
+        var playerPos = playerObject.transform.position;
+        //tried switching the order here to get the players to face the ball, but either way they faced the opposite direction
+        var lookVector = (ServicesLocator.Ball.transform.position - playerPos);
+        lookVector.x = playerPos.x;
+        lookVector.z = playerPos.z;
+
+        //don't understand why but making lookVector negative fixed the aforementioned issue
+        var lookRotation = Quaternion.LookRotation(-lookVector);
+        
+        playerObject.transform.rotation = Quaternion.Slerp(playerObject.transform.rotation, lookRotation, 1);
+    }
+    
     protected void AssignTeamColor(Team team)
     {
         Material teamMat;
@@ -99,6 +113,7 @@ public class AIPlayer : Player
     private BehaviorTree.Tree<AIPlayer> _tree;
     public float exhaustionTimer;
     public float timeToExhaustion = 5.0f;
+    public bool hasBall;
 
     public override void Initialize()
     {
@@ -111,7 +126,7 @@ public class AIPlayer : Player
             )
         );
     }
-
+    
     public override Vector3 Direction()
     {
         var direction = ServicesLocator.Ball.transform.position - playerObject.transform.position;
@@ -154,6 +169,13 @@ public class BallInRange : BehaviorTree.Node<AIPlayer>
     }
 }
 
+public class HasBall : BehaviorTree.Node<AIPlayer>
+{
+    public override bool Update(AIPlayer context)
+    {
+        throw new NotImplementedException();
+    }
+}
 public class IsExhausted : BehaviorTree.Node<AIPlayer>
 {
     public override bool Update(AIPlayer context)
@@ -190,6 +212,7 @@ public class Referee : Player
 
     public override void Update()
     {
+        base.Update();
         _RefereeStateMachine.Update();
     }
 
