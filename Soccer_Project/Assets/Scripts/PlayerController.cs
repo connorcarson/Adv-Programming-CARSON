@@ -5,12 +5,13 @@ using UnityEngine;
 public class PlayerController
 {
     public List<Player> _players;
+    private Player _referee;
     private int _numberOfPlayers = 2;
     public void Initialize(AGPEvent e)
     {
         _players = new List<Player>();
         GeneratePlayers();
-
+        _referee.Initialize();
         ServicesLocator.EventManager.Register<GoalScored>(ResetPlayers);
         
         //foreach (var player in _players)
@@ -25,6 +26,7 @@ public class PlayerController
         {
             player.Update();
         }
+        _referee.Update();
     }
 
     public void OnDestroy()
@@ -61,9 +63,8 @@ public class PlayerController
 
         var refereeObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/Player"));
         
-        var refereePlayer = new Referee(refereeObject, Player.Team.Referee, 1.5f);
-        refereePlayer.SetPosition();
-        _players.Add(refereePlayer);
+        _referee = new Referee(refereeObject, Player.Team.Referee, 1.5f);
+        //refereePlayer.SetPosition();
     }
 
     private void ResetPlayers(AGPEvent e)
@@ -72,5 +73,7 @@ public class PlayerController
         {
             player.SetPosition();
         }
+        
+        _referee.SetPosition();
     }
 }

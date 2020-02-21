@@ -116,6 +116,7 @@ public class Referee : Player
     private FiniteStateMachine<Referee> _RefereeStateMachine;
     public override void Initialize()
     {
+        SetPosition();
         _RefereeStateMachine = new FiniteStateMachine<Referee>(this);
         _RefereeStateMachine.TransitionTo<WatchBall>();
     }
@@ -133,7 +134,7 @@ public class Referee : Player
 
     public override void SetPosition()
     {
-        playerObject.transform.position = new Vector3(0, playerObject.transform.position.y, 1);
+        playerObject.transform.position = new Vector3(0, playerObject.transform.position.y, 2);
     }
 
     public Referee(GameObject playerObjectGameObject, Team teamAssignment, float speed)
@@ -149,7 +150,7 @@ public class RefereeState : FiniteStateMachine<Referee>.State
 {
     public override void OnEnter()
     {
-        Context.SetPosition();
+        
     }
 
     public override void Update()
