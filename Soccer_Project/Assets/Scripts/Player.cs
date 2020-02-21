@@ -17,28 +17,24 @@ public abstract class Player
 
     public virtual void Initialize() { }
 
-    public void Update()
+    public virtual void Update()
     {
         MoveTowards(Direction());
     }
 
-    private void MoveTowards(Vector3 direction)
+    public void MoveTowards(Vector3 direction)
     {
         var speedMultiplier = speed * Time.deltaTime;
         playerObject.transform.position += direction * speedMultiplier;
     }
     
-    protected virtual Vector3 Direction()
+    public virtual Vector3 Direction()
     {
         return new Vector3();
     }
 
     protected void AssignTeamColor(Team team)
     {
-        //tried using conditional ref expression because rider suggested it - it is weird/confusing, but cleaner.
-        //var teamMat = (team == Team.Blue)
-        //    ? Resources.Load<Material>("Materials/BlueMat")
-        //    : Resources.Load<Material>("Materials/OrangeMat");
         Material teamMat;
         switch (team)
         {
@@ -69,7 +65,7 @@ public class UserPlayer : Player
 {
     private readonly KeyCode[] _movementKeys = new KeyCode[4];
 
-    protected override Vector3 Direction()
+    public override Vector3 Direction()
     {
         var direction = new Vector3();
         
@@ -100,7 +96,7 @@ public class UserPlayer : Player
 
 public class AIPlayer : Player
 {
-    protected override Vector3 Direction()
+    public override Vector3 Direction()
     {
         var direction = ServicesLocator.Ball.transform.position - playerObject.transform.position;
         return direction.normalized;
@@ -117,12 +113,24 @@ public class AIPlayer : Player
 
 public class Referee : Player
 {
-    protected override Vector3 Direction()
+    private FiniteStateMachine<Referee> _RefereeStateMachine;
+    public override void Initialize()
+    {
+        _RefereeStateMachine = new FiniteStateMachine<Referee>(this);
+        _RefereeStateMachine.TransitionTo<WatchBall>();
+    }
+
+    public override void Update()
+    {
+        _RefereeStateMachine.Update();
+    }
+
+    public override Vector3 Direction()
     {
         var direction = ServicesLocator.Ball.transform.position - (playerObject.transform.position - Vector3.one);
         return direction.normalized;
     }
-    
+
     public override void SetPosition()
     {
         playerObject.transform.position = new Vector3(0, playerObject.transform.position.y, 1);
@@ -134,5 +142,47 @@ public class Referee : Player
         team = teamAssignment;
         this.speed = speed;
         AssignTeamColor(team);
+    }
+}
+
+public class RefereeState : FiniteStateMachine<Referee>.State
+{
+    public override void OnEnter()
+    {
+        Context.SetPosition();
+    }
+
+    public override void Update()
+    {
+        
+    }
+}
+
+public class WatchBall : RefereeState
+{
+    public override void OnEnter()
+    {
+        
+    }
+
+    public override void Update()
+    {
+        Context.MoveTowards(Context.Direction());
+    }
+}
+
+public class BlowWhistle : RefereeState
+{
+    public override void OnEnter()
+    {
+        ServicesLocator.AudioManager.Whistle();
+    }
+
+    public override void Update()
+    {
+        foreach (var player in ServicesLocator.PlayerManager._players)
+        {
+            player.MoveTowards(-player.Direction());
+        }
     }
 }

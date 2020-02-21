@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class ServicesLocator
 {
-    public static FiniteStateMachine<AIPlayer> AIPlayerStateMachine;
+    public static AudioManager AudioManager;
     public static SoccerBall Ball;
     public static Boundaries BoundaryController;
     public static EventManager EventManager;

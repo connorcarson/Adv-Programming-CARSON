@@ -62,4 +62,5 @@ public class GameManager : MonoBehaviour
     {
         gameOverScreen.SetActive(true);
     }
+    
 }
