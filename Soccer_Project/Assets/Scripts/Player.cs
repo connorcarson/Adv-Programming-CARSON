@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using BehaviorTree;
 
 public abstract class Player
 {
@@ -19,7 +20,7 @@ public abstract class Player
 
     public virtual void Update()
     {
-        MoveTowards(Direction());
+        //MoveTowards(Direction());
     }
 
     public void MoveTowards(Vector3 direction)
@@ -93,16 +94,41 @@ public class UserPlayer : Player
         AssignTeamColor(team);
     }
 }
-
 public class AIPlayer : Player
 {
     private BehaviorTree.Tree<AIPlayer> _tree;
+    public float exhaustionTimer;
+    public float timeToExhaustion = 5.0f;
+
+    public override void Initialize()
+    {
+        var chaseBallTree = new Tree<AIPlayer>
+        (
+            new Sequence<AIPlayer>(
+                new BallInRange(1.0f),
+                new IsExhausted(),
+                new ChaseBall(true)
+            )
+        );
+    }
+
     public override Vector3 Direction()
     {
         var direction = ServicesLocator.Ball.transform.position - playerObject.transform.position;
         return direction.normalized;
     }
 
+    public void ChaseBall(bool chase)
+    {
+        if (!chase)
+        {
+            exhaustionTimer = 0.0f; 
+            return;
+        }
+        MoveTowards(Direction());
+        exhaustionTimer += Time.deltaTime;
+    }
+    
     public AIPlayer(GameObject playerObjectGameObject, Team teamAssignment, float speed)
     {
         playerObject = playerObjectGameObject;
@@ -110,16 +136,46 @@ public class AIPlayer : Player
         this.speed = speed;
         AssignTeamColor(team);
     }
+}
 
-    public class ChaseBall : BehaviorTree.Node<AIPlayer>
+public class BallInRange : BehaviorTree.Node<AIPlayer>
+{
+    private float range;
+
+    public BallInRange(float range)
     {
-        public override bool Update(AIPlayer context)
-        {
-            throw new NotImplementedException();
-        }
+        this.range = range;
+    }
+    
+    public override bool Update(AIPlayer context)
+    {
+        var distance = Vector3.Distance(context.playerObject.transform.position, ServicesLocator.Ball.transform.position);
+        return distance < range;
     }
 }
 
+public class IsExhausted : BehaviorTree.Node<AIPlayer>
+{
+    public override bool Update(AIPlayer context)
+    {
+        return context.exhaustionTimer >= context.timeToExhaustion;
+    }
+}
+public class ChaseBall : BehaviorTree.Node<AIPlayer>
+{ 
+    private bool chase;
+
+    public ChaseBall(bool chase)
+    {
+        this.chase = chase;
+    }
+    
+    public override bool Update(AIPlayer context)
+    {
+        context.ChaseBall(chase);
+        return true;
+    }
+}
 
 
 public class Referee : Player
