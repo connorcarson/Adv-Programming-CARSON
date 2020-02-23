@@ -2,6 +2,7 @@
 using UnityEngine;
 using Random = UnityEngine.Random;
 using BehaviorTree;
+using UnityEngine.UI;
 
 public abstract class Player
 {
@@ -20,7 +21,7 @@ public abstract class Player
 
     public virtual void Update()
     {
-        LookAtBall();
+        //LookAtBall();
     }
 
     public void MoveTowards(Vector3 direction)
@@ -34,6 +35,11 @@ public abstract class Player
         return new Vector3();
     }
 
+    public virtual Vector3 Direction(GameObject target)
+    {
+        return new Vector3();
+    }
+    
     private void LookAtBall()
     {
         var playerPos = playerObject.transform.position;
@@ -134,18 +140,53 @@ public class AIPlayer : Player
         (
             new Sequence<AIPlayer>(
                 new BallInRange(1.0f),
-                new IsExhausted(),
+                new NotExhausted(),
                 new ChaseBall(true)
             )
         );
+
+        var approachGoalTree = new Tree<AIPlayer>
+        (
+            new Sequence<AIPlayer>(
+                new HasBall(),
+                new MoveTowardsGoal(true)
+            )
+        );
+        _tree = new Tree<AIPlayer>
+        (
+            new Selector<AIPlayer>(
+                chaseBallTree,
+                approachGoalTree
+            )
+        );
     }
-    
-    public override Vector3 Direction()
+
+    public override void Update()
     {
-        var direction = ServicesLocator.Ball.transform.position - playerObject.transform.position;
+        base.Update();
+        _tree.Update(this);
+    }
+
+    public override Vector3 Direction(GameObject target)
+    {
+        var direction = target.transform.position - playerObject.transform.position;
         return direction.normalized;
     }
 
+    private void LookAt(GameObject target)
+    {
+        var playerPos = playerObject.transform.position;
+        //tried switching the order here to get the players to face the ball, but either way they faced the opposite direction
+        var lookVector = (target.transform.position - playerPos);
+        lookVector.x = playerPos.x;
+        lookVector.z = playerPos.z;
+
+        //don't understand why but making lookVector negative fixed the aforementioned issue
+        var lookRotation = Quaternion.LookRotation(-lookVector);
+        
+        playerObject.transform.rotation = Quaternion.Slerp(playerObject.transform.rotation, lookRotation, 1);
+    }
+    
     public void ChaseBall(bool chase)
     {
         if (!chase)
@@ -153,8 +194,23 @@ public class AIPlayer : Player
             exhaustionTimer = 0.0f; 
             return;
         }
-        MoveTowards(Direction());
+        
+        LookAt(ServicesLocator.Ball.gameObject);
+        MoveTowards(Direction(ServicesLocator.Ball.gameObject));
         exhaustionTimer += Time.deltaTime;
+    }
+
+    public GameObject GetGoal()
+    {
+        if (team == Team.Blue){ return ServicesLocator.ScoreController.blueGoal; }
+        return ServicesLocator.ScoreController.orangeGoal;
+    }
+    public void MoveTowardsGoal(bool moveTowardsGoal)
+    {
+        if (!moveTowardsGoal) return;
+        
+        LookAt(GetGoal());
+        MoveTowards(Direction(GetGoal()));
     }
     
     public AIPlayer(GameObject playerObjectGameObject, Team teamAssignment, float speed)
@@ -163,6 +219,30 @@ public class AIPlayer : Player
         team = teamAssignment;
         this.speed = speed;
         AssignTeamColor(team);
+    }
+}
+
+public class HasBall : BehaviorTree.Node<AIPlayer>
+{
+    public override bool Update(AIPlayer context)
+    {
+        return ServicesLocator.Ball.transform.IsChildOf(context.playerObject.transform);
+    }
+}
+
+public class MoveTowardsGoal : BehaviorTree.Node<AIPlayer>
+{
+    private bool moveTowardsGoal;
+
+    public MoveTowardsGoal(bool moveTowardsGoal)
+    {
+        this.moveTowardsGoal = moveTowardsGoal;
+    }
+    
+    public override bool Update(AIPlayer context)
+    {
+        context.MoveTowardsGoal(moveTowardsGoal);
+        return true;
     }
 }
 
@@ -182,18 +262,11 @@ public class BallInRange : BehaviorTree.Node<AIPlayer>
     }
 }
 
-public class HasBall : BehaviorTree.Node<AIPlayer>
+public class NotExhausted : BehaviorTree.Node<AIPlayer>
 {
     public override bool Update(AIPlayer context)
     {
-        throw new NotImplementedException();
-    }
-}
-public class IsExhausted : BehaviorTree.Node<AIPlayer>
-{
-    public override bool Update(AIPlayer context)
-    {
-        return context.exhaustionTimer >= context.timeToExhaustion;
+        return context.exhaustionTimer < context.timeToExhaustion;
     }
 }
 public class ChaseBall : BehaviorTree.Node<AIPlayer>

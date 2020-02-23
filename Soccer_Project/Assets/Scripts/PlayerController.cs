@@ -14,10 +14,10 @@ public class PlayerController
         _referee.Initialize();
         ServicesLocator.EventManager.Register<GoalScored>(ResetPlayers);
         
-        //foreach (var player in _players)
-        //{
-        //    player.Initialize();
-        //}
+        foreach (var player in _players)
+        {
+            player.Initialize();
+        }
     }
 
     public void Update()
@@ -64,7 +64,6 @@ public class PlayerController
         var refereeObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/Player"));
         
         _referee = new Referee(refereeObject, Player.Team.Referee, 1.5f);
-        //refereePlayer.SetPosition();
     }
 
     private void ResetPlayers(AGPEvent e)

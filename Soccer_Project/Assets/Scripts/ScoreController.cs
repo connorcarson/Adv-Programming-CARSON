@@ -5,6 +5,8 @@ public class ScoreController : MonoBehaviour
 {
     public TextMeshProUGUI blueScoreTMP;
     public TextMeshProUGUI orangeScoreTMP;
+    public GameObject orangeGoal;
+    public GameObject blueGoal;
 
     private int _scoreGoal = 2;
     private int _blueTeamScore;

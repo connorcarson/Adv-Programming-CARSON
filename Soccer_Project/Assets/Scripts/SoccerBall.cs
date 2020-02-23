@@ -39,4 +39,12 @@ public class SoccerBall : MonoBehaviour
         transform.rotation = Quaternion.identity;
         _rb.velocity = Vector3.zero;
     }
+
+    private void OnCollisionEnter(Collision other)
+    {
+        if (other.collider.CompareTag("Player"))
+        {
+            transform.SetParent(other.gameObject.transform);
+        }
+    }
 }
