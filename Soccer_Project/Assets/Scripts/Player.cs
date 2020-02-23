@@ -34,7 +34,7 @@ public abstract class Player
         return new Vector3();
     }
 
-    protected virtual void LookAtBall()
+    private void LookAtBall()
     {
         var playerPos = playerObject.transform.position;
         //tried switching the order here to get the players to face the ball, but either way they faced the opposite direction
@@ -46,6 +46,19 @@ public abstract class Player
         var lookRotation = Quaternion.LookRotation(-lookVector);
         
         playerObject.transform.rotation = Quaternion.Slerp(playerObject.transform.rotation, lookRotation, 1);
+    }
+
+    public float DistanceToBall()
+    {
+        var ray = new Ray(playerObject.transform.position, playerObject.transform.forward);
+        var hits = Physics.RaycastAll(ray, 100f);
+
+        foreach (var hit in hits)
+        {
+            if(hit.collider.CompareTag("Ball")) return Vector3.Distance(hit.transform.position, playerObject.transform.position);
+        }
+        
+        return Mathf.Infinity;
     }
     
     protected void AssignTeamColor(Team team)
