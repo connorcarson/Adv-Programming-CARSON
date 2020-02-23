@@ -24,7 +24,7 @@ public abstract class Player
         //LookAtBall();
     }
 
-    public void MoveTowards(Vector3 direction)
+    public void MoveTowards(Vector3 direction, float speed)
     {
         var speedMultiplier = speed * Time.deltaTime;
         playerObject.transform.position += direction * speedMultiplier;
@@ -54,19 +54,6 @@ public abstract class Player
         playerObject.transform.rotation = Quaternion.Slerp(playerObject.transform.rotation, lookRotation, 1);
     }
 
-    public float DistanceToBall()
-    {
-        var ray = new Ray(playerObject.transform.position, playerObject.transform.forward);
-        var hits = Physics.RaycastAll(ray, 100f);
-
-        foreach (var hit in hits)
-        {
-            if(hit.collider.CompareTag("Ball")) return Vector3.Distance(hit.transform.position, playerObject.transform.position);
-        }
-        
-        return Mathf.Infinity;
-    }
-    
     protected void AssignTeamColor(Team team)
     {
         Material teamMat;
@@ -132,6 +119,8 @@ public class AIPlayer : Player
     private BehaviorTree.Tree<AIPlayer> _tree;
     public float exhaustionTimer;
     public float timeToExhaustion = 5.0f;
+    public float meanderTimer;
+    public float timeToNewTarget = 3.0f;
     public bool hasBall;
 
     public override void Initialize()
@@ -152,11 +141,23 @@ public class AIPlayer : Player
                 new MoveTowardsGoal(true)
             )
         );
+
+        var kickBallTree = new Tree<AIPlayer>
+        (
+            new Sequence<AIPlayer>(
+                new HasBall(),
+                new FacingGoal(),
+                new KickBall(true)
+            )
+        );
+
         _tree = new Tree<AIPlayer>
         (
             new Selector<AIPlayer>(
+                kickBallTree,
+                approachGoalTree,
                 chaseBallTree,
-                approachGoalTree
+                new Meander()
             )
         );
     }
@@ -182,9 +183,15 @@ public class AIPlayer : Player
         lookVector.z = playerPos.z;
 
         //don't understand why but making lookVector negative fixed the aforementioned issue
-        var lookRotation = Quaternion.LookRotation(-lookVector);
+        var lookRotation = Quaternion.LookRotation(lookVector);
         
         playerObject.transform.rotation = Quaternion.Slerp(playerObject.transform.rotation, lookRotation, 1);
+    }
+
+    public void Meander()
+    {
+        var target = new Vector3(Random.Range(-8, 8), playerObject.transform.position.y, Random.Range(-4, 4));
+        MoveTowards(target, 0.75f);
     }
     
     public void ChaseBall(bool chase)
@@ -196,7 +203,7 @@ public class AIPlayer : Player
         }
         
         LookAt(ServicesLocator.Ball.gameObject);
-        MoveTowards(Direction(ServicesLocator.Ball.gameObject));
+        MoveTowards(Direction(ServicesLocator.Ball.gameObject), 1.25f);
         exhaustionTimer += Time.deltaTime;
     }
 
@@ -210,7 +217,15 @@ public class AIPlayer : Player
         if (!moveTowardsGoal) return;
         
         LookAt(GetGoal());
-        MoveTowards(Direction(GetGoal()));
+        MoveTowards(Direction(GetGoal()), 1.25f);
+    }
+
+    public void KickBall(bool kick, Vector3 direction, float power)
+    {
+        if (!kick) return;
+        
+        var rb = ServicesLocator.Ball.GetComponent<Rigidbody>();
+        rb.AddForce(direction * power);
     }
     
     public AIPlayer(GameObject playerObjectGameObject, Team teamAssignment, float speed)
@@ -222,10 +237,58 @@ public class AIPlayer : Player
     }
 }
 
+public class Meander : BehaviorTree.Node<AIPlayer>
+{
+    public override bool Update(AIPlayer context)
+    {
+        Debug.Log("Player is aimlessly wandering around...");
+        context.Meander();
+        return true;
+    }
+}
+
+public class FacingGoal : BehaviorTree.Node<AIPlayer>
+{
+    public override bool Update(AIPlayer context)
+    {
+        var ray = new Ray(context.playerObject.transform.position, context.playerObject.transform.forward);
+        var hits = Physics.RaycastAll(ray, 100f);
+        
+        foreach (var hit in hits)
+        {
+            if (hit.collider.gameObject == context.GetGoal())
+            {
+                Debug.Log("Player is facing the goal!");
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+public class KickBall : BehaviorTree.Node<AIPlayer>
+{
+    private bool kick;
+    
+    public KickBall(bool kick)
+    {
+        this.kick = kick;
+    }
+    
+    public override bool Update(AIPlayer context)
+    {
+        Debug.Log("Player is kicking the ball!");
+        context.KickBall(kick, context.Direction(context.GetGoal()), 1.5f);
+        return true;
+    }
+}
+
 public class HasBall : BehaviorTree.Node<AIPlayer>
 {
     public override bool Update(AIPlayer context)
     {
+        Debug.Log("Player has the ball: " + ServicesLocator.Ball.transform.IsChildOf(context.playerObject.transform));
         return ServicesLocator.Ball.transform.IsChildOf(context.playerObject.transform);
     }
 }
@@ -241,6 +304,7 @@ public class MoveTowardsGoal : BehaviorTree.Node<AIPlayer>
     
     public override bool Update(AIPlayer context)
     {
+        Debug.Log("Player is moving towards the goal!");
         context.MoveTowardsGoal(moveTowardsGoal);
         return true;
     }
@@ -258,6 +322,7 @@ public class BallInRange : BehaviorTree.Node<AIPlayer>
     public override bool Update(AIPlayer context)
     {
         var distance = Vector3.Distance(context.playerObject.transform.position, ServicesLocator.Ball.transform.position);
+        Debug.Log("Ball in range: " + (distance < range));
         return distance < range;
     }
 }
@@ -266,6 +331,7 @@ public class NotExhausted : BehaviorTree.Node<AIPlayer>
 {
     public override bool Update(AIPlayer context)
     {
+        Debug.Log("Player not exhausted: " + (context.exhaustionTimer < context.timeToExhaustion));
         return context.exhaustionTimer < context.timeToExhaustion;
     }
 }
@@ -280,6 +346,7 @@ public class ChaseBall : BehaviorTree.Node<AIPlayer>
     
     public override bool Update(AIPlayer context)
     {
+        Debug.Log("Player is chasing the ball!");
         context.ChaseBall(chase);
         return true;
     }
@@ -344,7 +411,7 @@ public class WatchBall : RefereeState
 
     public override void Update()
     {
-        Context.MoveTowards(Context.Direction());
+        Context.MoveTowards(Context.Direction(), Context.speed);
     }
 }
 
@@ -359,7 +426,7 @@ public class BlowWhistle : RefereeState
     {
         foreach (var player in ServicesLocator.PlayerManager._players)
         {
-            player.MoveTowards(-player.Direction());
+            player.MoveTowards(-player.Direction(), 1.5f);
         }
     }
 }

@@ -2285,6 +2285,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blueScoreTMP: {fileID: 992022242}
   orangeScoreTMP: {fileID: 501435202}
+  orangeGoal: {fileID: 686703877}
+  blueGoal: {fileID: 9040375}
 --- !u!1 &501435200
 GameObject:
   m_ObjectHideFlags: 0
