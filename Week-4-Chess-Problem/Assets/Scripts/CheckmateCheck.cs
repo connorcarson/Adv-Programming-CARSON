@@ -9,24 +9,13 @@ public class CheckmateCheck : MonoBehaviour
 {
     public string checkMateInOne;
     public string noCheckMate;
-
-    private Piece[,] board = new Piece[8, 8];
-    public enum Piece
-    {
-        Empty,
-        Queen,
-        King,
-        Rook,
-        Knight,
-        Bishop,
-        WhitePawn,
-        BlackPawn
-    }
+    
+    private ChessPiece[,] chessBoard = new ChessPiece[8, 8];
     
     private void Start()
     {
         //LoopThroughBoard(checkMateInOne);
-        LoopThroughBoard(noCheckMate);
+        CreateBoard(noCheckMate);
     }
     
     private void Update()
@@ -39,7 +28,7 @@ public class CheckmateCheck : MonoBehaviour
         return Application.dataPath + "/TextAssets/" + fileName;
     }
 
-    private void LoopThroughBoard(string fileName)
+    private void CreateBoard(string fileName)
     {
         string[] rows = File.ReadAllLines(GetFilePath(fileName));
 
@@ -50,15 +39,63 @@ public class CheckmateCheck : MonoBehaviour
             for (var columnIndex = 0; columnIndex < row.Length; columnIndex++)
             {
                 var cell = row[columnIndex];
+                
+                chessBoard[columnIndex, rowIndex] = CreatePiece(cell);
+            }
+        }
+    }
+
+    private ChessPiece CreatePiece(char cell)
+    {
+        switch (cell)
+        {
+            case 'Q':
+                return new ChessPiece(ChessPiece.PieceType.Queen, ChessPiece.PieceColor.White);
+            case 'q':
+                return new ChessPiece(ChessPiece.PieceType.Queen, ChessPiece.PieceColor.Black);
+            case 'K':
+                return new ChessPiece(ChessPiece.PieceType.King, ChessPiece.PieceColor.White);
+            case 'k':
+                return new ChessPiece(ChessPiece.PieceType.King, ChessPiece.PieceColor.Black);
+            case 'R':
+                return new ChessPiece(ChessPiece.PieceType.Rook, ChessPiece.PieceColor.White);
+            case 'r':
+                return new ChessPiece(ChessPiece.PieceType.Rook, ChessPiece.PieceColor.Black);
+            case 'N':
+                return new ChessPiece(ChessPiece.PieceType.Knight, ChessPiece.PieceColor.White);
+            case 'n':
+                return new ChessPiece(ChessPiece.PieceType.Knight, ChessPiece.PieceColor.Black);
+            case 'B':
+                return new ChessPiece(ChessPiece.PieceType.Bishop, ChessPiece.PieceColor.White);
+            case 'b':
+                return new ChessPiece(ChessPiece.PieceType.Bishop, ChessPiece.PieceColor.Black);
+            case 'P':
+                return new ChessPiece(ChessPiece.PieceType.Pawn, ChessPiece.PieceColor.White);
+            case 'p':
+                return new ChessPiece(ChessPiece.PieceType.Pawn, ChessPiece.PieceColor.Black);
+            case '.':
+                return new ChessPiece(ChessPiece.PieceType.Empty, ChessPiece.PieceColor.None);
+            default:
+                throw new ArgumentException("Unexpected character. Not a valid piece type.");
+        }
+    }
+    
+    private void LoopThroughBoard()
+    {
+        for (var rowIndex = 0; rowIndex < chessBoard.GetLength(0); rowIndex++)
+        {
+            for (var columnIndex = 0; columnIndex < chessBoard.GetLength(1); columnIndex++)
+            {
+                var chessPiece = chessBoard[rowIndex, columnIndex];
 
                 //Check for piece - is cell occupied?
-                if (cell == '.') break;
+                if (chessPiece.myType == ChessPiece.PieceType.Empty) break;
                 
                 var position = new Vector2(columnIndex, rowIndex);
-                var piece = GetPieceType(cell);
+                
                 //Get all legal moves for piece
-                var legalMoves = GetLegalMoves(piece, position);
-                Debug.Log(cell + ": " + legalMoves.Count);
+                var legalMoves = GetLegalMoves(chessPiece, position);
+                Debug.Log(chessPiece.myType + ": " + legalMoves.Count);
 
                 //TODO: Make each valid move
                 //TODO: Check if King is in check, return if false, undo move
@@ -69,45 +106,17 @@ public class CheckmateCheck : MonoBehaviour
         }
     }
 
-    private Piece GetPieceType(char toCheck)
+    private string[] GetBoard(string fileName)
     {
-        Piece toReturn;
-        switch (toCheck)
-        {
-            case 'Q':
-            case 'q':
-                toReturn = Piece.Queen;
-                break;
-            case 'K':
-            case 'k':
-                toReturn = Piece.King;
-                break;
-            case 'R':
-            case 'r':
-                toReturn = Piece.Rook;
-                break;
-            case 'N':
-            case 'n':
-                toReturn = Piece.Knight;
-                break;
-            case 'B':
-            case 'b':
-                toReturn = Piece.Bishop;
-                break;
-            case 'P':
-                toReturn = Piece.WhitePawn;
-                break;
-            case 'p':
-                toReturn = Piece.BlackPawn;
-                break;
-            default:
-                throw new ArgumentException("Not a piece type.");
-        }
-
-        return toReturn;
+        return File.ReadAllLines(GetFilePath(fileName));
+    }
+    
+    private ChessPiece GetCell(Vector2 toCheck)
+    {
+        return chessBoard[(int)toCheck.x, (int)toCheck.y];
     }
 
-    private List<Vector2> LegalQueenMoves(Vector2 piecePos)
+    private List<Vector2> LegalQueenMoves(ChessPiece toCheck, Vector2 piecePos)
     {
         List<Vector2> legalMoves = new List<Vector2>();
 
@@ -135,7 +144,12 @@ public class CheckmateCheck : MonoBehaviour
         //get moves right
         for (var i = 1; i <= movesRight; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y));
+            var newPos = new Vector2(piecePos.x + i, piecePos.y);
+            var cell = GetCell(newPos);
+            
+            if (cell.myColor == toCheck.myColor) break;
+            
+            legalMoves.Add(newPos);
         }
 
         //get moves left
@@ -324,7 +338,7 @@ public class CheckmateCheck : MonoBehaviour
         return legalMoves;
     }
 
-    private List<Vector2> LegalPawnMoves(Vector2 piecePos, Piece pieceType)
+    private List<Vector2> LegalPawnMoves(Vector2 piecePos, ChessPiece.PieceColor pieceColor)
     {
         List<Vector2> legalMoves = new List<Vector2>();
         
@@ -349,9 +363,9 @@ public class CheckmateCheck : MonoBehaviour
         if (movesRight < movesDown) movesDiagonalRightDown = movesRight;
         else movesDiagonalRightDown = movesDown;
 
-        switch (pieceType)
+        switch (pieceColor)
         {
-            case Piece.WhitePawn:
+            case ChessPiece.PieceColor.White:
                 #region Pawn Moves
                 
                 if(movesUp > 0) legalMoves.Add(new Vector2(piecePos.x, piecePos.y + 1));
@@ -361,7 +375,7 @@ public class CheckmateCheck : MonoBehaviour
                 #endregion
                 break;
                         
-            case Piece.BlackPawn:
+            case ChessPiece.PieceColor.Black:
                 #region Pawn Moves
                 
                 if(movesDown > 0) legalMoves.Add(new Vector2(piecePos.x, piecePos.y - 1));
@@ -375,33 +389,30 @@ public class CheckmateCheck : MonoBehaviour
         return legalMoves;
     }
 
-    private List<Vector2> GetLegalMoves(Piece pieceType, Vector2 piecePos)
+    private List<Vector2> GetLegalMoves(ChessPiece toCheck, Vector2 piecePos)
     {
         List<Vector2> legalMoves = new List<Vector2>();
-        switch (pieceType)
+        switch (toCheck.myType)
         {
-           case Piece.Queen:
-               legalMoves = LegalQueenMoves(piecePos);
+           case ChessPiece.PieceType.Queen:
+               legalMoves = LegalQueenMoves(toCheck, piecePos);
                break;
-           case Piece.King:
+           case ChessPiece.PieceType.King:
                legalMoves = LegalKingMoves(piecePos);
                break;
-           case Piece.Rook:
+           case ChessPiece.PieceType.Rook:
                legalMoves = LegalRookMoves(piecePos);
                break;
-           case Piece.Knight:
+           case ChessPiece.PieceType.Knight:
                legalMoves = LegalKnightMoves(piecePos);
                break;
-           case Piece.Bishop:
+           case ChessPiece.PieceType.Bishop:
                legalMoves = LegalBishopMoves(piecePos);
                break;
-           case Piece.WhitePawn:
-               legalMoves = LegalPawnMoves(piecePos, Piece.WhitePawn);
+           case ChessPiece.PieceType.Pawn:
+               legalMoves = LegalPawnMoves(piecePos, toCheck.myColor);
                break;
-           case Piece.BlackPawn:
-               legalMoves = LegalPawnMoves(piecePos, Piece.BlackPawn);
-               break;
-           case Piece.Empty:
+           case ChessPiece.PieceType.Empty:
                Debug.Log("Cell is empty.");
                legalMoves = new List<Vector2>();
                break;
