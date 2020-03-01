@@ -22,10 +22,10 @@ public class CheckmateCheck : MonoBehaviour
         WhitePawn,
         BlackPawn
     }
-    private Piece toCheck;
+    
     private void Start()
     {
-        LoopThroughBoard(checkMateInOne);
+        //LoopThroughBoard(checkMateInOne);
         LoopThroughBoard(noCheckMate);
     }
     
@@ -43,28 +43,81 @@ public class CheckmateCheck : MonoBehaviour
     {
         string[] rows = File.ReadAllLines(GetFilePath(fileName));
 
-        foreach (var row in rows)
+        for (var rowIndex = 0; rowIndex < rows.Length; rowIndex++)
         {
-            foreach (var cell in row)
+            var row = rows[rowIndex];
+
+            for (var columnIndex = 0; columnIndex < row.Length; columnIndex++)
             {
-                Debug.Log(cell);
-                //TODO: Check for piece - is cell occupied?
-                //TODO: Look for valid move resulting in checkmate
+                var cell = row[columnIndex];
+
+                //Check for piece - is cell occupied?
+                if (cell == '.') break;
+                
+                var position = new Vector2(columnIndex, rowIndex);
+                var piece = GetPieceType(cell);
+                //Get all legal moves for piece
+                var legalMoves = GetLegalMoves(piece, position);
+                Debug.Log(cell + ": " + legalMoves.Count);
+
+                //TODO: Make each valid move
+                //TODO: Check if King is in check, return if false, undo move
+                //TODO: Check if King can move out of check, return if true, undo move
+                //TODO: Check if other pieces can block piece(s) that have King in check, return if true, undo move
+                //If we haven't returned from any of the above checks on a given move, King must be in checkmate!
             }
         }
+    }
+
+    private Piece GetPieceType(char toCheck)
+    {
+        Piece toReturn;
+        switch (toCheck)
+        {
+            case 'Q':
+            case 'q':
+                toReturn = Piece.Queen;
+                break;
+            case 'K':
+            case 'k':
+                toReturn = Piece.King;
+                break;
+            case 'R':
+            case 'r':
+                toReturn = Piece.Rook;
+                break;
+            case 'N':
+            case 'n':
+                toReturn = Piece.Knight;
+                break;
+            case 'B':
+            case 'b':
+                toReturn = Piece.Bishop;
+                break;
+            case 'P':
+                toReturn = Piece.WhitePawn;
+                break;
+            case 'p':
+                toReturn = Piece.BlackPawn;
+                break;
+            default:
+                throw new ArgumentException("Not a piece type.");
+        }
+
+        return toReturn;
     }
 
     private List<Vector2> LegalQueenMoves(Vector2 piecePos)
     {
         List<Vector2> legalMoves = new List<Vector2>();
-        
-        var movesDown = (board.Length - 1) - piecePos.y;
+
+        var movesDown = 7 - piecePos.y;
         var movesUp = piecePos.y;
-        var movesRight = (board.Length - 1) - piecePos.x;
+        var movesRight = 7 - piecePos.x;
         var movesLeft = piecePos.x;
 
         var movesDiagonalRightUp = 0.0f;
-        if (movesRight < movesUp) movesDiagonalRightUp = movesRight; 
+        if (movesRight < movesUp) movesDiagonalRightUp = movesRight;
         else movesDiagonalRightUp = movesUp;
 
         var movesDiagonalLeftUp = 0.0f;
@@ -78,58 +131,65 @@ public class CheckmateCheck : MonoBehaviour
         var movesDiagonalRightDown = 0.0f;
         if (movesRight < movesDown) movesDiagonalRightDown = movesRight;
         else movesDiagonalRightDown = movesDown;
-        
-                //get moves right
-                for (var i = 1; i < movesRight; i++)
-                {
-                    legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y));
-                }
-                //get moves left
-                for (var i = 1; i < movesLeft; i++)
-                {
-                    legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y));
-                }
-                //get moves up
-                for (var i = 1; i < movesUp; i++)
-                {
-                    legalMoves.Add(new Vector2(piecePos.x, piecePos.y + i));
-                }
-                //get moves down
-                for (var i = 1; i < movesDown; i++)
-                {
-                    legalMoves.Add(new Vector2(piecePos.x, piecePos.y - i));
-                }
-                //get diagonal moves (right and up)
-                for (var i = 1; i < movesDiagonalRightUp; i++)
-                {
-                    legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y + i));
-                }
-                //get diagonal moves (left and up)
-                for (var i = 1; i < movesDiagonalLeftUp; i++)
-                {
-                    legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y + i));
-                }
-                //get diagonal moves (left and down)
-                for (var i = 1; i < movesDiagonalLeftDown; i++)
-                {
-                    legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y - i));
-                }
-                //get diagonal moves (right and down)
-                for (var i = 1; i < movesDiagonalRightDown; i++)
-                {
-                    legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y - i));
-                }
 
-                return legalMoves;
+        //get moves right
+        for (var i = 1; i <= movesRight; i++)
+        {
+            legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y));
+        }
+
+        //get moves left
+        for (var i = 1; i <= movesLeft; i++)
+        {
+            legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y));
+        }
+
+        //get moves up
+        for (var i = 1; i <= movesUp; i++)
+        {
+            legalMoves.Add(new Vector2(piecePos.x, piecePos.y + i));
+        }
+
+        //get moves down
+        for (var i = 1; i <= movesDown; i++)
+        {
+            legalMoves.Add(new Vector2(piecePos.x, piecePos.y - i));
+        }
+
+        //get diagonal moves (right and up)
+        for (var i = 1; i <= movesDiagonalRightUp; i++)
+        {
+            legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y + i));
+        }
+
+        //get diagonal moves (left and up)
+        for (var i = 1; i <= movesDiagonalLeftUp; i++)
+        {
+            legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y + i));
+        }
+
+        //get diagonal moves (left and down)
+        for (var i = 1; i <= movesDiagonalLeftDown; i++)
+        {
+            legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y - i));
+        }
+
+        //get diagonal moves (right and down)
+        for (var i = 1; i <= movesDiagonalRightDown; i++)
+        {
+            legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y - i));
+        }
+
+        return legalMoves;
     }
 
     private List<Vector2> LegalKingMoves(Vector2 piecePos)
     {
         List<Vector2> legalMoves = new List<Vector2>();
         
-        var movesDown = (board.Length - 1) - piecePos.y;
+        var movesDown = 7 - piecePos.y;
         var movesUp = piecePos.y;
-        var movesRight = (board.Length - 1) - piecePos.x;
+        var movesRight = 7 - piecePos.x;
         var movesLeft = piecePos.x;
 
         var movesDiagonalRightUp = 0.0f;
@@ -165,28 +225,28 @@ public class CheckmateCheck : MonoBehaviour
     {
         List<Vector2> legalMoves = new List<Vector2>();
         
-        var movesDown = (board.Length - 1) - piecePos.y;
+        var movesDown = 7 - piecePos.y;
         var movesUp = piecePos.y;
-        var movesRight = (board.Length - 1) - piecePos.x;
+        var movesRight = 7 - piecePos.x;
         var movesLeft = piecePos.x;
         
         //get moves right
-        for (var i = 1; i < movesRight; i++)
+        for (var i = 1; i <= movesRight; i++)
         {
             legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y));
         }
         //get moves left
-        for (var i = 1; i < movesLeft; i++)
+        for (var i = 1; i <= movesLeft; i++)
         {
             legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y));
         }
         //get moves up
-        for (var i = 1; i < movesUp; i++)
+        for (var i = 1; i <= movesUp; i++)
         {
             legalMoves.Add(new Vector2(piecePos.x, piecePos.y + i));
         }
         //get moves down
-        for (var i = 1; i < movesDown; i++)
+        for (var i = 1; i <= movesDown; i++)
         {
             legalMoves.Add(new Vector2(piecePos.x, piecePos.y - i));
         }
@@ -198,9 +258,9 @@ public class CheckmateCheck : MonoBehaviour
     {
         List<Vector2> legalMoves = new List<Vector2>();
         
-        var movesDown = (board.Length - 1) - piecePos.y;
+        var movesDown = 7 - piecePos.y;
         var movesUp = piecePos.y;
-        var movesRight = (board.Length - 1) - piecePos.x;
+        var movesRight = 7 - piecePos.x;
         var movesLeft = piecePos.x;
         
         if(movesRight >= 2 && movesUp >= 1) legalMoves.Add(new Vector2(piecePos.x + 2, piecePos.y + 1));
@@ -219,9 +279,9 @@ public class CheckmateCheck : MonoBehaviour
     {
         List<Vector2> legalMoves = new List<Vector2>();
         
-        var movesDown = (board.Length - 1) - piecePos.y;
+        var movesDown = 7 - piecePos.y;
         var movesUp = piecePos.y;
-        var movesRight = (board.Length - 1) - piecePos.x;
+        var movesRight = 7 - piecePos.x;
         var movesLeft = piecePos.x;
 
         var movesDiagonalRightUp = 0.0f;
@@ -241,22 +301,22 @@ public class CheckmateCheck : MonoBehaviour
         else movesDiagonalRightDown = movesDown;
         
         //get diagonal moves (right and up)
-        for (var i = 1; i < movesDiagonalRightUp; i++)
+        for (var i = 1; i <= movesDiagonalRightUp; i++)
         {
             legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y + i));
         }
         //get diagonal moves (left and up)
-        for (var i = 1; i < movesDiagonalLeftUp; i++)
+        for (var i = 1; i <= movesDiagonalLeftUp; i++)
         {
             legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y + i));
         }
         //get diagonal moves (left and down)
-        for (var i = 1; i < movesDiagonalLeftDown; i++)
+        for (var i = 1; i <= movesDiagonalLeftDown; i++)
         {
             legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y - i));
         }
         //get diagonal moves (right and down)
-        for (var i = 1; i < movesDiagonalRightDown; i++)
+        for (var i = 1; i <= movesDiagonalRightDown; i++)
         {
             legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y - i));
         }
@@ -268,9 +328,9 @@ public class CheckmateCheck : MonoBehaviour
     {
         List<Vector2> legalMoves = new List<Vector2>();
         
-        var movesDown = (board.Length - 1) - piecePos.y;
+        var movesDown = 7 - piecePos.y;
         var movesUp = piecePos.y;
-        var movesRight = (board.Length - 1) - piecePos.x;
+        var movesRight = 7 - piecePos.x;
         var movesLeft = piecePos.x;
 
         var movesDiagonalRightUp = 0.0f;
@@ -355,9 +415,9 @@ public class CheckmateCheck : MonoBehaviour
 //    {
 //        List<Vector2> legalMoves = new List<Vector2>();
 //        
-//        var movesDown = (board.Length - 1) - piecePos.y;
+//        var movesDown = 7 - piecePos.y;
 //        var movesUp = piecePos.y;
-//        var movesRight = (board.Length - 1) - piecePos.x;
+//        var movesRight = 7 - piecePos.x;
 //        var movesLeft = piecePos.x;
 //
 //        var movesDiagonalRightUp = 0.0f;
