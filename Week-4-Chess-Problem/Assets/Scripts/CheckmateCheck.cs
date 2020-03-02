@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using UnityEngine;
 
@@ -18,11 +16,11 @@ public class CheckmateCheck : MonoBehaviour
     }
     public FileToCheck currentFile;
     
-    private ChessPiece[,] chessBoard = new ChessPiece[8, 8];
+    private ChessPiece[,] _chessBoard = new ChessPiece[8, 8];
 
-    private ChessPiece King;
-    private ChessPiece king;
-    private ChessPiece attackedPiece;
+    private ChessPiece _whiteKing;
+    private ChessPiece _blackKing;
+    private ChessPiece _attackedPiece;
     
     private void Start()
     {
@@ -57,8 +55,8 @@ public class CheckmateCheck : MonoBehaviour
             for (var columnIndex = 0; columnIndex < row.Length; columnIndex++)
             {
                 var cell = row[columnIndex];
-                
-                chessBoard[rowIndex, columnIndex] = CreatePiece(cell, new Vector2(rowIndex, columnIndex));
+
+                _chessBoard[rowIndex, columnIndex] = CreatePiece(cell, new Vector2(rowIndex, columnIndex));
             }
         }
     }
@@ -72,11 +70,11 @@ public class CheckmateCheck : MonoBehaviour
             case 'q':
                 return new ChessPiece(ChessPiece.PieceType.Queen, ChessPiece.PieceColor.Black, position);
             case 'K':
-                King = new ChessPiece(ChessPiece.PieceType.King, ChessPiece.PieceColor.White, position);
-                return King;
+                _whiteKing = new ChessPiece(ChessPiece.PieceType.King, ChessPiece.PieceColor.White, position);
+                return _whiteKing;
             case 'k':
-                king = new ChessPiece(ChessPiece.PieceType.King, ChessPiece.PieceColor.Black, position);
-                return king;
+                _blackKing = new ChessPiece(ChessPiece.PieceType.King, ChessPiece.PieceColor.Black, position);
+                return _blackKing;
             case 'R':
                 return new ChessPiece(ChessPiece.PieceType.Rook, ChessPiece.PieceColor.White, position);
             case 'r':
@@ -103,11 +101,11 @@ public class CheckmateCheck : MonoBehaviour
     private bool CheckMate()
     {
         var totalPossibleMoves = 0;
-        for (var rowIndex = 0; rowIndex < chessBoard.GetLength(0); rowIndex++)
+        for (var rowIndex = 0; rowIndex < _chessBoard.GetLength(0); rowIndex++)
         {
-            for (var columnIndex = 0; columnIndex < chessBoard.GetLength(1); columnIndex++)
+            for (var columnIndex = 0; columnIndex < _chessBoard.GetLength(1); columnIndex++)
             {
-                var chessPiece = chessBoard[rowIndex, columnIndex];
+                var chessPiece = _chessBoard[rowIndex, columnIndex];
                 
                 //Check for piece - is cell occupied?
                 if (chessPiece.type == ChessPiece.PieceType.Empty) break;
@@ -153,8 +151,8 @@ public class CheckmateCheck : MonoBehaviour
         foreach (var move in possibleMoves)
         {
             //make each move one by one
-            chessBoard[(int)attackedPiece.position.x, (int)attackedPiece.position.y] = new ChessPiece(ChessPiece.PieceType.Empty, ChessPiece.PieceColor.None, position);
-            chessBoard[(int) move.x, (int) move.y] = attackedPiece;
+            _chessBoard[(int)_attackedPiece.position.x, (int)_attackedPiece.position.y] = new ChessPiece(ChessPiece.PieceType.Empty, ChessPiece.PieceColor.None, position);
+            _chessBoard[(int) move.x, (int) move.y] = _attackedPiece;
                         
             //if the king is no longer in check
             if (!KingInCheck(chessPiece))
@@ -168,21 +166,21 @@ public class CheckmateCheck : MonoBehaviour
 
     private bool KingInCheck(ChessPiece attackingPiece)
     {
-        if (attackingPiece.color == ChessPiece.PieceColor.White) attackedPiece = king;
-        else attackedPiece = King;
+        if (attackingPiece.color == ChessPiece.PieceColor.White) _attackedPiece = _blackKing;
+        else _attackedPiece = _whiteKing;
         
-        for (var rowIndex = 0; rowIndex < chessBoard.GetLength(0); rowIndex++)
+        for (var rowIndex = 0; rowIndex < _chessBoard.GetLength(0); rowIndex++)
         {
-            for (var columnIndex = 0; columnIndex < chessBoard.GetLength(1); columnIndex++)
+            for (var columnIndex = 0; columnIndex < _chessBoard.GetLength(1); columnIndex++)
             {
-                var chessPiece = chessBoard[rowIndex, columnIndex];
+                var chessPiece = _chessBoard[rowIndex, columnIndex];
                 
                 if (chessPiece.color == attackingPiece.color)
                 {
                     var position = new Vector2(columnIndex, rowIndex);
                     var legalMoves = GetLegalMoves(chessPiece, position);
 
-                    if (legalMoves.Contains(attackedPiece.position)) return true;
+                    if (legalMoves.Contains(_attackedPiece.position)) return true;
                 }
             }
         }
@@ -192,7 +190,7 @@ public class CheckmateCheck : MonoBehaviour
 
     private ChessPiece GetCell(Vector2 toCheck)
     {
-        return chessBoard[(int)toCheck.x, (int)toCheck.y];
+        return _chessBoard[(int)toCheck.x, (int)toCheck.y];
     }
 
     private List<Vector2> LegalQueenMoves(ChessPiece toCheck, Vector2 piecePos)
