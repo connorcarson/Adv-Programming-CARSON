@@ -15,7 +15,7 @@ public class ChessPiece
         Bishop,
         Pawn
     }
-    public PieceType myType;
+    public PieceType type;
 
     public enum PieceColor
     {
@@ -23,11 +23,11 @@ public class ChessPiece
         Black,
         White
     }
-    public PieceColor myColor;
+    public PieceColor color;
     
     public ChessPiece(PieceType type, PieceColor color)
     {
-        myType = type;
-        myColor = color;
+        this.type = type;
+        this.color = color;
     }
 }

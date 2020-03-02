@@ -16,6 +16,7 @@ public class CheckmateCheck : MonoBehaviour
     {
         //LoopThroughBoard(checkMateInOne);
         CreateBoard(noCheckMate);
+        LoopThroughBoard();
     }
     
     private void Update()
@@ -40,7 +41,7 @@ public class CheckmateCheck : MonoBehaviour
             {
                 var cell = row[columnIndex];
                 
-                chessBoard[columnIndex, rowIndex] = CreatePiece(cell);
+                chessBoard[rowIndex, columnIndex] = CreatePiece(cell);
             }
         }
     }
@@ -87,15 +88,15 @@ public class CheckmateCheck : MonoBehaviour
             for (var columnIndex = 0; columnIndex < chessBoard.GetLength(1); columnIndex++)
             {
                 var chessPiece = chessBoard[rowIndex, columnIndex];
-
+                
                 //Check for piece - is cell occupied?
-                if (chessPiece.myType == ChessPiece.PieceType.Empty) break;
+                if (chessPiece.type == ChessPiece.PieceType.Empty) break;
                 
                 var position = new Vector2(columnIndex, rowIndex);
                 
                 //Get all legal moves for piece
                 var legalMoves = GetLegalMoves(chessPiece, position);
-                Debug.Log(chessPiece.myType + ": " + legalMoves.Count);
+                Debug.Log(chessPiece.color + " " + chessPiece.type + ": " + legalMoves.Count);
 
                 //TODO: Make each valid move
                 //TODO: Check if King is in check, return if false, undo move
@@ -144,10 +145,10 @@ public class CheckmateCheck : MonoBehaviour
         //get moves right
         for (var i = 1; i <= movesRight; i++)
         {
-            var newPos = new Vector2(piecePos.x + i, piecePos.y);
+            var newPos = new Vector2(piecePos.y, piecePos.x + i);
             var cell = GetCell(newPos);
-            
-            if (cell.myColor == toCheck.myColor) break;
+
+            if (cell.color == toCheck.color) break;
             
             legalMoves.Add(newPos);
         }
@@ -155,49 +156,84 @@ public class CheckmateCheck : MonoBehaviour
         //get moves left
         for (var i = 1; i <= movesLeft; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y));
+            var newPos = new Vector2(piecePos.y, piecePos.x - i);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+            
+            legalMoves.Add(newPos);
         }
 
         //get moves up
         for (var i = 1; i <= movesUp; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x, piecePos.y + i));
+            var newPos = new Vector2(piecePos.y - i, piecePos.x);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+            
+            legalMoves.Add(newPos);
         }
 
         //get moves down
         for (var i = 1; i <= movesDown; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x, piecePos.y - i));
+            var newPos = new Vector2(piecePos.y + i, piecePos.x);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+            
+            legalMoves.Add(newPos);
         }
 
         //get diagonal moves (right and up)
         for (var i = 1; i <= movesDiagonalRightUp; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y + i));
+            var newPos = new Vector2(piecePos.y - i, piecePos.x + i);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+            
+            legalMoves.Add(newPos);
         }
 
         //get diagonal moves (left and up)
         for (var i = 1; i <= movesDiagonalLeftUp; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y + i));
+            var newPos = new Vector2(piecePos.y - i, piecePos.x - i);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+                
+            legalMoves.Add(newPos);
         }
 
         //get diagonal moves (left and down)
         for (var i = 1; i <= movesDiagonalLeftDown; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y - i));
+            var newPos = new Vector2(piecePos.y + i, piecePos.x - i);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+            
+            legalMoves.Add(newPos);
         }
 
         //get diagonal moves (right and down)
         for (var i = 1; i <= movesDiagonalRightDown; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y - i));
+            var newPos = new Vector2(piecePos.y + i, piecePos.x + i);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+            
+            legalMoves.Add(newPos);
         }
 
         return legalMoves;
     }
 
-    private List<Vector2> LegalKingMoves(Vector2 piecePos)
+    private List<Vector2> LegalKingMoves(ChessPiece toCheck, Vector2 piecePos)
     {
         List<Vector2> legalMoves = new List<Vector2>();
         
@@ -221,21 +257,75 @@ public class CheckmateCheck : MonoBehaviour
         var movesDiagonalRightDown = 0.0f;
         if (movesRight < movesDown) movesDiagonalRightDown = movesRight;
         else movesDiagonalRightDown = movesDown;
+
+        if (movesRight > 0)
+        {
+            var newPos = new Vector2(piecePos.y, piecePos.x + 1);
+            var cell = GetCell(newPos);
+            
+            if (cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
         
-        if(movesRight > 0) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y));
-        if(movesLeft > 0) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y));
-        if(movesUp > 0) legalMoves.Add(new Vector2(piecePos.x, piecePos.y + 1));
-        if(movesDown > 0) legalMoves.Add(new Vector2(piecePos.x, piecePos.y - 1));
-                
-        if(movesDiagonalRightUp > 0) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y + 1));
-        if(movesDiagonalLeftUp > 0) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y + 1));
-        if(movesDiagonalLeftDown > 0) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y - 1));
-        if(movesDiagonalRightDown > 0) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y - 1));
+        if (movesLeft > 0)
+        {
+            var newPos = new Vector2(piecePos.y, piecePos.x - 1);
+            var cell = GetCell(newPos);
+            
+            if (cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+        
+        if (movesUp > 0)
+        {
+            var newPos = new Vector2(piecePos.y - 1, piecePos.x);
+            var cell = GetCell(newPos);
+            
+            if (cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+        
+        if (movesDown > 0)
+        {
+            var newPos = new Vector2(piecePos.y + 1, piecePos.x);
+            var cell = GetCell(newPos);
+            
+            if (cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+
+        if (movesDiagonalRightUp > 0)
+        {
+            var newPos = new Vector2(piecePos.y - 1, piecePos.x + 1);
+            var cell = GetCell(newPos);
+            
+            if (cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+        
+        if (movesDiagonalLeftUp > 0)
+        {
+            var newPos = new Vector2(piecePos.y - 1, piecePos.x - 1);
+            var cell = GetCell(newPos);
+            
+            if (cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+        
+        if (movesDiagonalLeftDown > 0)
+        {
+            var newPos = new Vector2(piecePos.y + 1, piecePos.x - 1);
+            var cell = GetCell(newPos);
+            
+            if (cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+        
+        if (movesDiagonalRightDown > 0)
+        {
+            var newPos = new Vector2(piecePos.y + 1, piecePos.x + 1);
+            var cell = GetCell(newPos);
+            
+            if (cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
 
         return legalMoves;
     }
 
-    private List<Vector2> LegalRookMoves(Vector2 piecePos)
+    private List<Vector2> LegalRookMoves(ChessPiece toCheck, Vector2 piecePos)
     {
         List<Vector2> legalMoves = new List<Vector2>();
         
@@ -247,28 +337,51 @@ public class CheckmateCheck : MonoBehaviour
         //get moves right
         for (var i = 1; i <= movesRight; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y));
+            var newPos = new Vector2(piecePos.y, piecePos.x + i);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+            
+            legalMoves.Add(newPos);
         }
+        
         //get moves left
         for (var i = 1; i <= movesLeft; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y));
+            var newPos = new Vector2(piecePos.y, piecePos.x - i);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+            
+            legalMoves.Add(newPos);
         }
+        
         //get moves up
         for (var i = 1; i <= movesUp; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x, piecePos.y + i));
+            var newPos = new Vector2(piecePos.y - i, piecePos.x);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break; 
+            
+            legalMoves.Add(newPos);
         }
+        
         //get moves down
         for (var i = 1; i <= movesDown; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x, piecePos.y - i));
+            var newPos = new Vector2(piecePos.y + i, piecePos.x);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break; 
+            
+            legalMoves.Add(newPos);
         }
 
         return legalMoves;
     }
 
-    private List<Vector2> LegalKnightMoves(Vector2 piecePos)
+    private List<Vector2> LegalKnightMoves(ChessPiece toCheck, Vector2 piecePos)
     {
         List<Vector2> legalMoves = new List<Vector2>();
         
@@ -276,20 +389,75 @@ public class CheckmateCheck : MonoBehaviour
         var movesUp = piecePos.y;
         var movesRight = 7 - piecePos.x;
         var movesLeft = piecePos.x;
+
+        if (movesRight >= 2 && movesUp >= 1)
+        {
+            var newPos = new Vector2(piecePos.y - 1, piecePos.x + 2);
+            var cell = GetCell(newPos);
+            
+            if(cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
         
-        if(movesRight >= 2 && movesUp >= 1) legalMoves.Add(new Vector2(piecePos.x + 2, piecePos.y + 1));
-        if(movesRight >= 1 && movesUp >= 2) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y + 2));
-        if(movesRight >= 2 && movesDown >= 1) legalMoves.Add(new Vector2(piecePos.x + 2, piecePos.y - 1));
-        if (movesRight >= 1 && movesDown >= 2) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y - 2));
-        if(movesLeft >= 2 && movesUp >= 1) legalMoves.Add( new Vector2(piecePos.x - 2, piecePos.y + 1));
-        if (movesLeft >= 1 && movesUp >= 2) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y + 2));
-        if(movesLeft >= 2 && movesDown >= 1) legalMoves.Add(new Vector2(piecePos.x - 2, piecePos.y - 1));
-        if(movesLeft >= 1 && movesDown >= 2) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y - 2));
+        if (movesRight >= 1 && movesUp >= 2)
+        {
+            var newPos = new Vector2(piecePos.y - 2, piecePos.x + 1);
+            var cell = GetCell(newPos);
+            
+            if(cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+        
+        if (movesRight >= 2 && movesDown >= 1)
+        {
+            var newPos = new Vector2(piecePos.y + 1, piecePos.x + 2);
+            var cell = GetCell(newPos);
+            
+            if(cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+        
+        if (movesRight >= 1 && movesDown >= 2)
+        {
+            var newPos = new Vector2(piecePos.y + 2, piecePos.x + 1);
+            var cell = GetCell(newPos);
+            
+            if(cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+        
+        if (movesLeft >= 2 && movesUp >= 1)
+        {
+            var newPos = new Vector2(piecePos.y - 1, piecePos.x - 2);
+            var cell = GetCell(newPos);
+            
+            if(cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+        
+        if (movesLeft >= 1 && movesUp >= 2)
+        {
+            var newPos = new Vector2(piecePos.y - 2, piecePos.x - 1);
+            var cell = GetCell(newPos);
+            
+            if(cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+        
+        if (movesLeft >= 2 && movesDown >= 1)
+        {
+            var newPos = new Vector2(piecePos.y + 1, piecePos.x - 2);
+            var cell = GetCell(newPos);
+            
+            if(cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
+        
+        if (movesLeft >= 1 && movesDown >= 2)
+        {
+            var newPos = new Vector2(piecePos.y + 2, piecePos.x - 1);
+            var cell = GetCell(newPos);
+            
+            if(cell.color != toCheck.color) legalMoves.Add(newPos);
+        }
 
         return legalMoves;
     }
 
-    private List<Vector2> LegalBishopMoves(Vector2 piecePos)
+    private List<Vector2> LegalBishopMoves(ChessPiece toCheck, Vector2 piecePos)
     {
         List<Vector2> legalMoves = new List<Vector2>();
         
@@ -317,28 +485,51 @@ public class CheckmateCheck : MonoBehaviour
         //get diagonal moves (right and up)
         for (var i = 1; i <= movesDiagonalRightUp; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y + i));
+            var newPos = new Vector2(piecePos.y - i, piecePos.x + i);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+            
+            legalMoves.Add(newPos);
         }
+        
         //get diagonal moves (left and up)
         for (var i = 1; i <= movesDiagonalLeftUp; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y + i));
+            var newPos = new Vector2(piecePos.y - i, piecePos.x - i);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+                
+            legalMoves.Add(newPos);
         }
+
         //get diagonal moves (left and down)
         for (var i = 1; i <= movesDiagonalLeftDown; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y - i));
+            var newPos = new Vector2(piecePos.y + i, piecePos.x - i);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+            
+            legalMoves.Add(newPos);
         }
+
         //get diagonal moves (right and down)
         for (var i = 1; i <= movesDiagonalRightDown; i++)
         {
-            legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y - i));
+            var newPos = new Vector2(piecePos.y + i, piecePos.x + i);
+            var cell = GetCell(newPos);
+
+            if (cell.color == toCheck.color) break;
+            
+            legalMoves.Add(newPos);
         }
 
         return legalMoves;
     }
 
-    private List<Vector2> LegalPawnMoves(Vector2 piecePos, ChessPiece.PieceColor pieceColor)
+    private List<Vector2> LegalPawnMoves(ChessPiece toCheck, Vector2 piecePos)
     {
         List<Vector2> legalMoves = new List<Vector2>();
         
@@ -363,24 +554,64 @@ public class CheckmateCheck : MonoBehaviour
         if (movesRight < movesDown) movesDiagonalRightDown = movesRight;
         else movesDiagonalRightDown = movesDown;
 
-        switch (pieceColor)
+        switch (toCheck.color)
         {
-            case ChessPiece.PieceColor.White:
+            case ChessPiece.PieceColor.Black:
                 #region Pawn Moves
-                
-                if(movesUp > 0) legalMoves.Add(new Vector2(piecePos.x, piecePos.y + 1));
-                if(movesDiagonalRightUp > 0) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y + 1));
-                if(movesDiagonalLeftUp > 0) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y + 1)); 
+
+                if (movesUp > 0)
+                {
+                    var newPos = new Vector2(piecePos.y - 1, piecePos.x);
+                    var cell = GetCell(newPos);
+
+                    if (cell.color != toCheck.color) legalMoves.Add(newPos);
+                }
+
+                if (movesDiagonalRightUp > 0)
+                {
+                    var newPos = new Vector2(piecePos.y - 1, piecePos.x + 1);
+                    var cell = GetCell(newPos);
+
+                    if (cell.color == ChessPiece.PieceColor.Black) legalMoves.Add(newPos);
+                }
+
+                if (movesDiagonalLeftUp > 0)
+                {
+                    var newPos = new Vector2(piecePos.y - 1, piecePos.x - 1);
+                    var cell = GetCell(newPos);
+
+                    if (cell.color == ChessPiece.PieceColor.Black) legalMoves.Add(newPos);
+                } 
             
                 #endregion
                 break;
                         
-            case ChessPiece.PieceColor.Black:
+            case ChessPiece.PieceColor.White:
                 #region Pawn Moves
-                
-                if(movesDown > 0) legalMoves.Add(new Vector2(piecePos.x, piecePos.y - 1));
-                if(movesDiagonalRightDown > 0) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y - 1));
-                if(movesDiagonalLeftDown > 0) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y - 1)); 
+
+                if (movesDown > 0)
+                {
+                    var newPos = new Vector2(piecePos.y + 1, piecePos.x);
+                    var cell = GetCell(newPos);
+
+                    if (cell.color != toCheck.color) legalMoves.Add(newPos);
+                }
+
+                if (movesDiagonalRightDown > 0)
+                {
+                    var newPos = new Vector2(piecePos.y + 1, piecePos.x + 1);
+                    var cell = GetCell(newPos);
+
+                    if (cell.color == ChessPiece.PieceColor.White) legalMoves.Add(newPos);
+                }
+
+                if (movesDiagonalLeftDown > 0)
+                {
+                    var newPos = new Vector2(piecePos.y + 1, piecePos.x - 1);
+                    var cell = GetCell(newPos);
+
+                    if (cell.color == ChessPiece.PieceColor.White) legalMoves.Add(newPos);
+                } 
             
                 #endregion
                 break;
@@ -392,25 +623,25 @@ public class CheckmateCheck : MonoBehaviour
     private List<Vector2> GetLegalMoves(ChessPiece toCheck, Vector2 piecePos)
     {
         List<Vector2> legalMoves = new List<Vector2>();
-        switch (toCheck.myType)
+        switch (toCheck.type)
         {
            case ChessPiece.PieceType.Queen:
                legalMoves = LegalQueenMoves(toCheck, piecePos);
                break;
            case ChessPiece.PieceType.King:
-               legalMoves = LegalKingMoves(piecePos);
+               legalMoves = LegalKingMoves(toCheck, piecePos);
                break;
            case ChessPiece.PieceType.Rook:
-               legalMoves = LegalRookMoves(piecePos);
+               legalMoves = LegalRookMoves(toCheck, piecePos);
                break;
            case ChessPiece.PieceType.Knight:
-               legalMoves = LegalKnightMoves(piecePos);
+               legalMoves = LegalKnightMoves(toCheck, piecePos);
                break;
            case ChessPiece.PieceType.Bishop:
-               legalMoves = LegalBishopMoves(piecePos);
+               legalMoves = LegalBishopMoves(toCheck, piecePos);
                break;
            case ChessPiece.PieceType.Pawn:
-               legalMoves = LegalPawnMoves(piecePos, toCheck.myColor);
+               legalMoves = LegalPawnMoves(toCheck, piecePos);
                break;
            case ChessPiece.PieceType.Empty:
                Debug.Log("Cell is empty.");
