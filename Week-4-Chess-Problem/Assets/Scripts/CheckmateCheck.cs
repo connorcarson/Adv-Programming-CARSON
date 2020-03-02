@@ -7,21 +7,38 @@ using UnityEngine;
 
 public class CheckmateCheck : MonoBehaviour
 {
-    public string checkMateInOne;
     public string noCheckMate;
+    public string checkMateInOne;
+
+    public enum FileToCheck
+    {
+        None,
+        NoCheckMate,
+        CheckMateInOne,
+    }
+    public FileToCheck currentFile;
     
     private ChessPiece[,] chessBoard = new ChessPiece[8, 8];
+
+    private ChessPiece King;
+    private ChessPiece king;
+    private ChessPiece attackedPiece;
     
     private void Start()
     {
-        //LoopThroughBoard(checkMateInOne);
-        CreateBoard(noCheckMate);
-        LoopThroughBoard();
-    }
-    
-    private void Update()
-    {
-        
+        switch (currentFile)
+        {
+            case FileToCheck.NoCheckMate:
+                CreateBoard(noCheckMate);
+                break;
+            case FileToCheck.CheckMateInOne:
+                CreateBoard(checkMateInOne);
+                break;
+            default:
+                throw new ArgumentException("File not selected.");
+        }
+
+        CheckMate();
     }
 
     private string GetFilePath(string fileName)
@@ -41,48 +58,51 @@ public class CheckmateCheck : MonoBehaviour
             {
                 var cell = row[columnIndex];
                 
-                chessBoard[rowIndex, columnIndex] = CreatePiece(cell);
+                chessBoard[rowIndex, columnIndex] = CreatePiece(cell, new Vector2(rowIndex, columnIndex));
             }
         }
     }
 
-    private ChessPiece CreatePiece(char cell)
+    private ChessPiece CreatePiece(char cell, Vector2 position)
     {
         switch (cell)
         {
             case 'Q':
-                return new ChessPiece(ChessPiece.PieceType.Queen, ChessPiece.PieceColor.White);
+                return new ChessPiece(ChessPiece.PieceType.Queen, ChessPiece.PieceColor.White, position);
             case 'q':
-                return new ChessPiece(ChessPiece.PieceType.Queen, ChessPiece.PieceColor.Black);
+                return new ChessPiece(ChessPiece.PieceType.Queen, ChessPiece.PieceColor.Black, position);
             case 'K':
-                return new ChessPiece(ChessPiece.PieceType.King, ChessPiece.PieceColor.White);
+                King = new ChessPiece(ChessPiece.PieceType.King, ChessPiece.PieceColor.White, position);
+                return King;
             case 'k':
-                return new ChessPiece(ChessPiece.PieceType.King, ChessPiece.PieceColor.Black);
+                king = new ChessPiece(ChessPiece.PieceType.King, ChessPiece.PieceColor.Black, position);
+                return king;
             case 'R':
-                return new ChessPiece(ChessPiece.PieceType.Rook, ChessPiece.PieceColor.White);
+                return new ChessPiece(ChessPiece.PieceType.Rook, ChessPiece.PieceColor.White, position);
             case 'r':
-                return new ChessPiece(ChessPiece.PieceType.Rook, ChessPiece.PieceColor.Black);
+                return new ChessPiece(ChessPiece.PieceType.Rook, ChessPiece.PieceColor.Black, position);
             case 'N':
-                return new ChessPiece(ChessPiece.PieceType.Knight, ChessPiece.PieceColor.White);
+                return new ChessPiece(ChessPiece.PieceType.Knight, ChessPiece.PieceColor.White, position);
             case 'n':
-                return new ChessPiece(ChessPiece.PieceType.Knight, ChessPiece.PieceColor.Black);
+                return new ChessPiece(ChessPiece.PieceType.Knight, ChessPiece.PieceColor.Black, position);
             case 'B':
-                return new ChessPiece(ChessPiece.PieceType.Bishop, ChessPiece.PieceColor.White);
+                return new ChessPiece(ChessPiece.PieceType.Bishop, ChessPiece.PieceColor.White, position);
             case 'b':
-                return new ChessPiece(ChessPiece.PieceType.Bishop, ChessPiece.PieceColor.Black);
+                return new ChessPiece(ChessPiece.PieceType.Bishop, ChessPiece.PieceColor.Black, position);
             case 'P':
-                return new ChessPiece(ChessPiece.PieceType.Pawn, ChessPiece.PieceColor.White);
+                return new ChessPiece(ChessPiece.PieceType.Pawn, ChessPiece.PieceColor.White, position);
             case 'p':
-                return new ChessPiece(ChessPiece.PieceType.Pawn, ChessPiece.PieceColor.Black);
+                return new ChessPiece(ChessPiece.PieceType.Pawn, ChessPiece.PieceColor.Black, position);
             case '.':
-                return new ChessPiece(ChessPiece.PieceType.Empty, ChessPiece.PieceColor.None);
+                return new ChessPiece(ChessPiece.PieceType.Empty, ChessPiece.PieceColor.None, position);
             default:
                 throw new ArgumentException("Unexpected character. Not a valid piece type.");
         }
     }
     
-    private void LoopThroughBoard()
+    private bool CheckMate()
     {
+        var totalPossibleMoves = 0;
         for (var rowIndex = 0; rowIndex < chessBoard.GetLength(0); rowIndex++)
         {
             for (var columnIndex = 0; columnIndex < chessBoard.GetLength(1); columnIndex++)
@@ -97,21 +117,79 @@ public class CheckmateCheck : MonoBehaviour
                 //Get all legal moves for piece
                 var legalMoves = GetLegalMoves(chessPiece, position);
                 Debug.Log(chessPiece.color + " " + chessPiece.type + ": " + legalMoves.Count);
-
-                //TODO: Make each valid move
-                //TODO: Check if King is in check, return if false, undo move
-                //TODO: Check if King can move out of check, return if true, undo move
-                //TODO: Check if other pieces can block piece(s) that have King in check, return if true, undo move
-                //If we haven't returned from any of the above checks on a given move, King must be in checkmate!
+                totalPossibleMoves += legalMoves.Count;
+                
+//                foreach (var move in legalMoves)
+//                {
+//                    //Make each move one by one
+//                    chessBoard[rowIndex, columnIndex] = new ChessPiece(ChessPiece.PieceType.Empty, ChessPiece.PieceColor.None, new Vector2(rowIndex, columnIndex));
+//                    chessBoard[(int)move.x, (int)move.y] = chessPiece;
+//
+//                    //if the move does not result in the king being checked
+//                    if (!KingInCheck(chessPiece)) break;
+//                    
+//                    //Get all legal moves for the king under attack
+//                    var kingsMoves = GetLegalMoves(attackedPiece, attackedPiece.position);
+//
+//                    //if king cannot escape
+//                    if (!KingCanEscape(kingsMoves, chessPiece, position))
+//                    {
+//                        //TODO: Check if other pieces can block the piece(s) that have King in check, break if true
+//                        
+//                        //If we haven't returned from any of the above checks on a given move, King must be in checkmate!
+//                        return true;
+//                    }
+//                    
+//                    //TODO: Undo last move, reset board to original state
+//                }
             }
         }
+        Debug.Log("Total possible legal moves: " + totalPossibleMoves);
+        return false;
     }
 
-    private string[] GetBoard(string fileName)
+    private bool KingCanEscape(List<Vector2> possibleMoves, ChessPiece chessPiece, Vector2 position)
     {
-        return File.ReadAllLines(GetFilePath(fileName));
+        foreach (var move in possibleMoves)
+        {
+            //make each move one by one
+            chessBoard[(int)attackedPiece.position.x, (int)attackedPiece.position.y] = new ChessPiece(ChessPiece.PieceType.Empty, ChessPiece.PieceColor.None, position);
+            chessBoard[(int) move.x, (int) move.y] = attackedPiece;
+                        
+            //if the king is no longer in check
+            if (!KingInCheck(chessPiece))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
-    
+
+    private bool KingInCheck(ChessPiece attackingPiece)
+    {
+        if (attackingPiece.color == ChessPiece.PieceColor.White) attackedPiece = king;
+        else attackedPiece = King;
+        
+        for (var rowIndex = 0; rowIndex < chessBoard.GetLength(0); rowIndex++)
+        {
+            for (var columnIndex = 0; columnIndex < chessBoard.GetLength(1); columnIndex++)
+            {
+                var chessPiece = chessBoard[rowIndex, columnIndex];
+                
+                if (chessPiece.color == attackingPiece.color)
+                {
+                    var position = new Vector2(columnIndex, rowIndex);
+                    var legalMoves = GetLegalMoves(chessPiece, position);
+
+                    if (legalMoves.Contains(attackedPiece.position)) return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private ChessPiece GetCell(Vector2 toCheck)
     {
         return chessBoard[(int)toCheck.x, (int)toCheck.y];
@@ -567,6 +645,15 @@ public class CheckmateCheck : MonoBehaviour
                     if (cell.color != toCheck.color) legalMoves.Add(newPos);
                 }
 
+                if (movesUp > 1)
+                {
+                    var newPos = new Vector2(piecePos.y - 2, piecePos.x);
+                    var cell = GetCell(newPos);
+
+                    //Hacky way to check if pawn is able to move 2 squares
+                    if (cell.type == ChessPiece.PieceType.Empty && piecePos.y == 6) legalMoves.Add(newPos);
+                }
+
                 if (movesDiagonalRightUp > 0)
                 {
                     var newPos = new Vector2(piecePos.y - 1, piecePos.x + 1);
@@ -595,6 +682,15 @@ public class CheckmateCheck : MonoBehaviour
                     var cell = GetCell(newPos);
 
                     if (cell.color != toCheck.color) legalMoves.Add(newPos);
+                }
+
+                if (movesDown > 1)
+                {
+                    var newPos = new Vector2(piecePos.y + 2, piecePos.x);
+                    var cell = GetCell(newPos);
+                    
+                    //Hacky way to check if pawn is able to move 2 squares
+                    if (cell.type == ChessPiece.PieceType.Empty && piecePos.y == 1) legalMoves.Add(newPos);
                 }
 
                 if (movesDiagonalRightDown > 0)
@@ -653,197 +749,7 @@ public class CheckmateCheck : MonoBehaviour
 
         return legalMoves;
     }
-//    List<Vector2> LegalMoves(Vector2 piecePos, Piece piece)
-//    {
-//        List<Vector2> legalMoves = new List<Vector2>();
-//        
-//        var movesDown = 7 - piecePos.y;
-//        var movesUp = piecePos.y;
-//        var movesRight = 7 - piecePos.x;
-//        var movesLeft = piecePos.x;
-//
-//        var movesDiagonalRightUp = 0.0f;
-//        if (movesRight < movesUp) movesDiagonalRightUp = movesRight; 
-//        else movesDiagonalRightUp = movesUp;
-//
-//        var movesDiagonalLeftUp = 0.0f;
-//        if (movesLeft < movesUp) movesDiagonalLeftUp = movesLeft;
-//        else movesDiagonalLeftUp = movesUp;
-//
-//        var movesDiagonalLeftDown = 0.0f;
-//        if (movesLeft < movesDown) movesDiagonalLeftDown = movesLeft;
-//        else movesDiagonalLeftDown = movesDown;
-//
-//        var movesDiagonalRightDown = 0.0f;
-//        if (movesRight < movesDown) movesDiagonalRightDown = movesRight;
-//        else movesDiagonalRightDown = movesDown;
-//
-//        switch (piece)
-//        {
-//            case Piece.Queen:
-//                #region Queen Moves
-//                
-//                //get moves right
-//                for (var i = 1; i < movesRight; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y));
-//                }
-//                //get moves left
-//                for (var i = 1; i < movesLeft; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y));
-//                }
-//                //get moves up
-//                for (var i = 1; i < movesUp; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x, piecePos.y + i));
-//                }
-//                //get moves down
-//                for (var i = 1; i < movesDown; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x, piecePos.y - i));
-//                }
-//                //get diagonal moves (right and up)
-//                for (var i = 1; i < movesDiagonalRightUp; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y + i));
-//                }
-//                //get diagonal moves (left and up)
-//                for (var i = 1; i < movesDiagonalLeftUp; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y + i));
-//                }
-//                //get diagonal moves (left and down)
-//                for (var i = 1; i < movesDiagonalLeftDown; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y - i));
-//                }
-//                //get diagonal moves (right and down)
-//                for (var i = 1; i < movesDiagonalRightDown; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y - i));
-//                }
-//                
-//                #endregion
-//                break;
-//            
-//            case Piece.King:
-//                #region King Moves
-//                
-//                if(movesRight > 0) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y));
-//                if(movesLeft > 0) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y));
-//                if(movesUp > 0) legalMoves.Add(new Vector2(piecePos.x, piecePos.y + 1));
-//                if(movesDown > 0) legalMoves.Add(new Vector2(piecePos.x, piecePos.y - 1));
-//                
-//                if(movesDiagonalRightUp > 0) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y + 1));
-//                if(movesDiagonalLeftUp > 0) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y + 1));
-//                if(movesDiagonalLeftDown > 0) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y - 1));
-//                if(movesDiagonalRightDown > 0) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y - 1));
-//                
-//                #endregion
-//                break;
-//
-//            case Piece.Knight:
-//                #region Knight Moves
-//            
-//                if(movesRight >= 2 && movesUp >= 1) legalMoves.Add(new Vector2(piecePos.x + 2, piecePos.y + 1));
-//                if(movesRight >= 1 && movesUp >= 2) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y + 2));
-//                if(movesRight >= 2 && movesDown >= 1) legalMoves.Add(new Vector2(piecePos.x + 2, piecePos.y - 1));
-//                if (movesRight >= 1 && movesDown >= 2) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y - 2));
-//                if(movesLeft >= 2 && movesUp >= 1) legalMoves.Add( new Vector2(piecePos.x - 2, piecePos.y + 1));
-//                if (movesLeft >= 1 && movesUp >= 2) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y + 2));
-//                if(movesLeft >= 2 && movesDown >= 1) legalMoves.Add(new Vector2(piecePos.x - 2, piecePos.y - 1));
-//                if(movesLeft >= 1 && movesDown >= 2) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y - 2));
-//                
-//                #endregion
-//                break;
-//            
-//            case Piece.Bishop:
-//                #region Bishop Moves
-//                
-//                //get diagonal moves (right and up)
-//                for (var i = 1; i < movesDiagonalRightUp; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y + i));
-//                }
-//                //get diagonal moves (left and up)
-//                for (var i = 1; i < movesDiagonalLeftUp; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y + i));
-//                }
-//                //get diagonal moves (left and down)
-//                for (var i = 1; i < movesDiagonalLeftDown; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y - i));
-//                }
-//                //get diagonal moves (right and down)
-//                for (var i = 1; i < movesDiagonalRightDown; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y - i));
-//                }   
-//            
-//                #endregion
-//                break;
-//            
-//            case Piece.Rook:
-//                #region Rook Moves
-//                
-//                //get moves right
-//                for (var i = 1; i < movesRight; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x + i, piecePos.y));
-//                }
-//                //get moves left
-//                for (var i = 1; i < movesLeft; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x - i, piecePos.y));
-//                }
-//                //get moves up
-//                for (var i = 1; i < movesUp; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x, piecePos.y + i));
-//                }
-//                //get moves down
-//                for (var i = 1; i < movesDown; i++)
-//                {
-//                    legalMoves.Add(new Vector2(piecePos.x, piecePos.y - i));
-//                }
-//                
-//                #endregion
-//                break;
-//            
-//            case Piece.WhitePawn:
-//                #region Pawn Moves
-//                
-//                if(movesUp > 0) legalMoves.Add(new Vector2(piecePos.x, piecePos.y + 1));
-//                if(movesDiagonalRightUp > 0) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y + 1));
-//                if(movesDiagonalLeftUp > 0) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y + 1)); 
-//            
-//                #endregion
-//                break;
-//            
-//            case Piece.BlackPawn:
-//                #region Pawn Moves
-//                
-//                if(movesDown > 0) legalMoves.Add(new Vector2(piecePos.x, piecePos.y - 1));
-//                if(movesDiagonalRightDown > 0) legalMoves.Add(new Vector2(piecePos.x + 1, piecePos.y - 1));
-//                if(movesDiagonalLeftDown > 0) legalMoves.Add(new Vector2(piecePos.x - 1, piecePos.y - 1)); 
-//            
-//                #endregion
-//                break;
-//            
-//            case Piece.Empty:
-//                Debug.Log("Cell is empty.");
-//                legalMoves = new List<Vector2>();
-//                break;
-//            
-//            default:
-//                throw new ArgumentNullException();
-//        }
-//        
-//        return legalMoves;
-//    }
-    
+
     // CONNOR: Found these resources/suggestions online...
     //
     // "I'd implement a common way to get all legal moves for a piece, along with their side effects

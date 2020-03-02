@@ -24,10 +24,13 @@ public class ChessPiece
         White
     }
     public PieceColor color;
+
+    public Vector2 position;
     
-    public ChessPiece(PieceType type, PieceColor color)
+    public ChessPiece(PieceType type, PieceColor color, Vector2 position)
     {
         this.type = type;
         this.color = color;
+        this.position = position;
     }
 }
