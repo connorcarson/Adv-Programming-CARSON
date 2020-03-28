@@ -1,18 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class AspectRatioController : MonoBehaviour
 {
+    [SerializeField] private CanvasScaler _canvasScaler;
     [SerializeField] private float _horizontalAspect, _verticalAspect;
 
     private void Start()
     {
         Camera cam = GetComponent<Camera>();
-        AdjustToWindowSize(_horizontalAspect, _verticalAspect, cam);
+        Debug.Log(Screen.width + " : " + Screen.height);
+        AdjustToWindowSize(_horizontalAspect, _verticalAspect, cam, _canvasScaler);
+        Debug.Log(Screen.width + " : " + Screen.height);
     }
 
-    private static void AdjustToWindowSize(float horizontalAspect, float verticalAspect, Camera toAdjust)
+    private static void AdjustToWindowSize(float horizontalAspect, float verticalAspect, Camera toAdjust, CanvasScaler scaler)
     {
         float targetAspectRatio = horizontalAspect / verticalAspect;
         float windowAspectRatio = (float)Screen.width / (float)Screen.height;
@@ -38,5 +42,8 @@ public class AspectRatioController : MonoBehaviour
         }
         
         toAdjust.rect = rect;
+        
+        Vector2 newResolution = new Vector2(Screen.width * scaleWidth, Screen.height * scaleHeight);
+        scaler.referenceResolution = newResolution;
     }
 }
