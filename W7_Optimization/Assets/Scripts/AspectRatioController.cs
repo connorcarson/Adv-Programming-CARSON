@@ -1,21 +1,23 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
+[ExecuteInEditMode]
 public class AspectRatioController : MonoBehaviour
 {
+    [SerializeField] private Camera mainCamera;
     [SerializeField] private CanvasScaler _canvasScaler;
-    [SerializeField] private float _horizontalAspect, _verticalAspect;
+    [SerializeField] private Vector2 _aspectRatio;
 
-    private void Start()
+    private void Awake()
     {
-        Camera cam = GetComponent<Camera>();
-        Debug.Log(Screen.width + " : " + Screen.height);
-        AdjustToWindowSize(_horizontalAspect, _verticalAspect, cam, _canvasScaler);
-        Debug.Log(Screen.width + " : " + Screen.height);
+        _canvasScaler.referenceResolution = new Vector2(Screen.width, Screen.height);
     }
 
+    private void Update()
+    {
+        AdjustToWindowSize(_aspectRatio.x, _aspectRatio.y, mainCamera, _canvasScaler);
+    }
+    
     private static void AdjustToWindowSize(float horizontalAspect, float verticalAspect, Camera toAdjust, CanvasScaler scaler)
     {
         float targetAspectRatio = horizontalAspect / verticalAspect;
