@@ -4,30 +4,48 @@ using UnityEngine;
 
 public class ObjectPoolManager : MonoBehaviour
 {
-
     [SerializeField] 
-    private GameObject _objectContainer, _objectToPool;
-
-    [SerializeField] 
-    private int maxObjects;
+    private GameObject _objectContainer, _objectToPool,  _target;
     
-    private List<GameObject> _activeObjects = new List<GameObject>(); 
-    private List<GameObject> _inactiveObjects = new List<GameObject>();
+    [SerializeField] 
+    private int _maxObjects;
+
+    [SerializeField] 
+    private float _spawnSpeed, _movementSpeed;
+    
+    private readonly List<GameObject> _activeObjects = new List<GameObject>(); 
+    private readonly List<GameObject> _inactiveObjects = new List<GameObject>();
 
     private ScreenBounds _screenBounds;
-
+    
     private void Start()
     {
         _screenBounds = new ScreenBounds(Camera.main);
         
-        MakeObjects(_objectToPool, _objectContainer.transform, maxObjects, _inactiveObjects);
+        MakeObjects(_objectToPool, _objectContainer.transform, _maxObjects, _inactiveObjects);
+        
+        InvokeRepeating(nameof(GetObject), 0, _spawnSpeed);
     }
     
     private void Update()
     {
-        
+        UpdateObjects(_activeObjects, _inactiveObjects, _target, _movementSpeed);
     }
 
+    private static void UpdateObjects(List<GameObject> activeObjects, List<GameObject> inactiveObjects, GameObject target, float speed)
+    {
+        for (var i = 0; i < activeObjects.Count; i++)
+        {
+            activeObjects[i].transform.position = Vector3.MoveTowards(activeObjects[i].transform.position, target.transform.position, speed * Time.deltaTime);
+            
+            if (Mathf.Abs(activeObjects[i].transform.position.x - target.transform.position.x) < 0.01f &&
+                Mathf.Abs(activeObjects[i].transform.position.y - target.transform.position.y) < 0.01f)
+            {
+                DeactivateObject(activeObjects[i], inactiveObjects, activeObjects);
+            }
+        }
+    }
+    
     private static void MakeObjects(GameObject toMake, Transform parent, int numberToMake, List<GameObject> inactive)
     {
         for (var i = 0; i < numberToMake; i++)
@@ -40,17 +58,37 @@ public class ObjectPoolManager : MonoBehaviour
         }
     }
 
-    private GameObject GetObject(List<GameObject> inactive)
+    private void GetObject()
     {
-        return inactive[0];
+        ActivateObject(_inactiveObjects, _activeObjects);
+    }
+    
+    private void ActivateObject(List<GameObject> inactive, List<GameObject> active)
+    {
+        var toActivate = inactive[0];
+        
+        toActivate.transform.position = GetRandomPositionOffscreen(_screenBounds, 1);
+
+        inactive.Remove(toActivate);
+        active.Add(toActivate);
+        
+        toActivate.SetActive(true);
+    }
+
+    private static void DeactivateObject(GameObject toDeactivate, List<GameObject> inactive, List<GameObject> active)
+    {
+        toDeactivate.SetActive(false);
+        
+        active.Remove(toDeactivate);
+        inactive.Add(toDeactivate);
     }
 
     private static Vector2 GetRandomPositionOffscreen(ScreenBounds screenBounds, float distanceFromBounds)
     {
-        Vector2 toReturn = new Vector2();
+        var toReturn = new Vector2();
 
-        float randomNumber = Random.Range(0, 1);
-        
+        var randomNumber = Random.Range(0.0f, 1.0f);
+
         //approx. 25% of the time, spawn offscreen left
         if (randomNumber <= 0.25f) {
             toReturn.x = Random.Range(screenBounds.left - distanceFromBounds, screenBounds.left);
