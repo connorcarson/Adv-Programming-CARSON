@@ -6,14 +6,15 @@ using UnityEngine;
 
 public class DialogueEditorWindow : EditorWindow
 {
+    
+    private readonly List<Conversation> conversations = new List<Conversation>();
+    private string characterName = "Input NPC name...";
+    
     [MenuItem("Window/Dialogue Editor")]
     public static void ShowWindow()
     { 
         GetWindow<DialogueEditorWindow>("DialogueEditor");
     }
-    
-    private List<Conversation> conversations = new List<Conversation>();
-    private bool showConversation = true;
 
     private void OnGUI()
     {
@@ -25,8 +26,8 @@ public class DialogueEditorWindow : EditorWindow
         GUILayout.Space(EditorGUIUtility.singleLineHeight);
         
         GUILayout.BeginHorizontal();
-        GUILayout.Label("Character Name", EditorStyles.boldLabel);
-        EditorGUILayout.TextField("Name");
+        GUILayout.Label("NPC Name", EditorStyles.boldLabel);
+        characterName = EditorGUILayout.TextField(characterName);
         GUILayout.EndHorizontal();
 
         GUILayout.Space(EditorGUIUtility.singleLineHeight);
@@ -35,43 +36,63 @@ public class DialogueEditorWindow : EditorWindow
         {
             var conversation = new Conversation();
             conversations.Add(conversation);
-            conversation.lines.Add(new Line());
         }
         
         EditorGUILayout.LabelField(String.Empty, GUI.skin.horizontalSlider);
 
         for(var i = 0; i < conversations.Count; i++)
         {
-            showConversation = EditorGUILayout.Foldout(showConversation, "Conversation " + (i + 1));
+            conversations[i].displayed = EditorGUILayout.Foldout(conversations[i].displayed, "Conversation " + (i + 1));
             
-            if (showConversation) {
+            GUILayout.Space(EditorGUIUtility.singleLineHeight);
+            
+            if (conversations[i].displayed) {
                 for (var j = 0; j < conversations[i].lines.Count; j++)
                 {
-
                     GUILayout.Label("Line", EditorStyles.boldLabel);
                 
-                    EditorGUILayout.TextArea("Write dialogue text here...", EditorStyles.textArea, GUILayout.MinWidth(250), GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 3));
+                    conversations[i].lines[j].line = EditorGUILayout.TextArea(conversations[i].lines[j].line, EditorStyles.textArea, GUILayout.MinWidth(250), GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 3));
 
-                    //GUILayout.Space(EditorGUIUtility.singleLineHeight);
-                    
                     GUILayout.Space(EditorGUIUtility.singleLineHeight/2);
-                    for (var k = 0; k < conversations[i].lines[j].responses.Count; k++)
+                    
+                    conversations[i].lines[j].endConversation = GUILayout.Toggle(conversations[i].lines[j].endConversation, "Ends Conversation");
+                    
+                    GUILayout.Space(EditorGUIUtility.singleLineHeight);
+
+                    if (!conversations[i].lines[j].endConversation)
                     {
-                        GUILayout.Label("Response " + conversations[i].lines.Count, EditorStyles.centeredGreyMiniLabel);
-                        EditorGUILayout.TextArea("Write dialogue text here...", EditorStyles.textArea, GUILayout.MinWidth(250), GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 2));
-                    }
+                        conversations[i].lines[j].responsesDisplayed = EditorGUILayout.Foldout(conversations[i].lines[j].responsesDisplayed, "Player Choices");
+                        
+                        if (conversations[i].lines[j].responsesDisplayed)
+                        {
+                            for (var k = 0; k < conversations[i].lines[j].responses.Count; k++)
+                            {
+                                GUILayout.Label("Response " + conversations[i].lines.Count, EditorStyles.centeredGreyMiniLabel);
+                                conversations[i].lines[j].responses[k].response = EditorGUILayout.TextArea(conversations[i].lines[j].responses[k].response, EditorStyles.textArea, GUILayout.MinWidth(250), GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 2));
+                                if (GUILayout.Button("Delete Response"))
+                                {
+                                    conversations[i].lines[i].responses.Remove(conversations[i].lines[i].responses[j]);
+                                }
+                            }
                 
-                    GUILayout.Space(EditorGUIUtility.singleLineHeight/2);
+                            GUILayout.Space(EditorGUIUtility.singleLineHeight);
                     
-                    if (GUILayout.Button("Add Response"))
-                    {
-                        conversations[i].lines[j].responses.Add(new Response());
+                            if (GUILayout.Button("Add Response")) {
+                                conversations[i].lines[j].responses.Add(new Response());
+                            }
+                    
+                            EditorGUILayout.LabelField(String.Empty, GUI.skin.horizontalSlider);   
+                        }
+                        
+                        if (GUILayout.Button("Add Line")){
+                            conversations[i].lines.Add(new Line());
+                        }
                     }
                 }
-                
-                if (GUILayout.Button("Add Line"))
+
+                if (GUILayout.Button("Delete Conversation"))
                 {
-                    conversations[i].lines.Add(new Line());
+                    conversations.Remove(conversations[i]);
                 }
                 
                 GUILayout.Space(EditorGUIUtility.singleLineHeight/2);
