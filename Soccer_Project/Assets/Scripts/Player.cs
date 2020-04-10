@@ -89,7 +89,7 @@ public class UserPlayer : Player
     public override Vector3 Direction()
     {
         var direction = new Vector3();
-        
+
         if (Input.GetKey(_movementKeys[0])) direction += playerObject.transform.forward;
         if (Input.GetKey(_movementKeys[1])) direction += -playerObject.transform.right;
         if (Input.GetKey(_movementKeys[2])) direction += -playerObject.transform.forward;
@@ -112,6 +112,11 @@ public class UserPlayer : Player
         team = teamAssignment;
         speed = playerSpeed;
         AssignTeamColor(team);
+    }
+
+    public override void Update()
+    {
+        MoveTowards(Direction(), speed);
     }
 }
 public class AIPlayer : Player

@@ -9,6 +9,9 @@ public class GameManager : MonoBehaviour
 {
     public GameObject titleScreen;
     public GameObject gameOverScreen;
+
+    private bool _gameBegun;
+    
     void Awake()
     {
         ServicesLocator.GameManager = this;
@@ -21,7 +24,10 @@ public class GameManager : MonoBehaviour
     {
         ServicesLocator.EventManager.Register<GameStarted>(ServicesLocator.PlayerManager.Initialize);
         ServicesLocator.EventManager.Register<GameStarted>(DisableTitleScreen);
+        ServicesLocator.EventManager.Register<GameStarted>((AGPEvent e) => { _gameBegun = true; });
+        
         ServicesLocator.EventManager.Register<GameWon>(EnableGameOverScreen);
+        
         ServicesLocator.BoundaryController.Initialize();
     }
 
@@ -29,18 +35,19 @@ public class GameManager : MonoBehaviour
     {
         ServicesLocator.EventManager.Unregister<GameStarted>(ServicesLocator.PlayerManager.Initialize);
         ServicesLocator.EventManager.Unregister<GameStarted>(DisableTitleScreen);
+
         ServicesLocator.EventManager.Unregister<GameWon>(EnableGameOverScreen);
     }
 
     // Update is called once per frame
     void Update()
     {
-        ServicesLocator.PlayerManager.Update();
+        if(_gameBegun) ServicesLocator.PlayerManager.Update();
     }
 
     private void LateUpdate()
     {
-        ServicesLocator.BoundaryController.Update();
+        if(_gameBegun) ServicesLocator.BoundaryController.Update();
     }
 
     public void StartButton()

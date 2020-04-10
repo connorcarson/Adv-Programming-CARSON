@@ -17,7 +17,7 @@ public class Conversation
 [System.Serializable]
 public class Line
 {
-    public string line = "Write  NPC dialogue here...";
+    public string line = "Write NPC dialogue here...";
     public List<Response> responses = new List<Response>();
     public bool endConversation = false;
     public bool responsesDisplayed = true;
@@ -31,5 +31,5 @@ public class Line
 [System.Serializable]
 public class Response
 {
-    public string response = "Write  Player response here...";
+    public string response = "Write Player response here...";
 }
