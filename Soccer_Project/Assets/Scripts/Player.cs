@@ -24,10 +24,16 @@ public abstract class Player
         //LookAtBall();
     }
 
-    public void MoveTowards(Vector3 direction, float speed)
+    public void MoveInDirection(Vector3 direction, float speed)
     {
-        var speedMultiplier = speed * Time.deltaTime;
-        playerObject.transform.position += direction * speedMultiplier;
+        var step = speed * Time.deltaTime;
+        playerObject.transform.position += direction * step;
+    }
+
+    public void MoveTowardsPosition(Vector3 target, float speed)
+    {
+        var step = speed * Time.deltaTime;
+        playerObject.transform.position = Vector3.MoveTowards(playerObject.transform.position, target, step);
     }
     
     public virtual Vector3 Direction()
@@ -116,7 +122,7 @@ public class UserPlayer : Player
 
     public override void Update()
     {
-        MoveTowards(Direction(), speed);
+        MoveInDirection(Direction(), speed);
     }
 }
 public class AIPlayer : Player
@@ -124,12 +130,20 @@ public class AIPlayer : Player
     private BehaviorTree.Tree<AIPlayer> _tree;
     public float exhaustionTimer;
     public float timeToExhaustion = 5.0f;
-    public float meanderTimer;
-    public float timeToNewTarget = 3.0f;
-    public bool hasBall;
+    public Vector3 prevTarget, currentTarget;
 
     public override void Initialize()
     {
+        currentTarget = GetRandomTarget();
+        
+        var gettingRandomPosTree = new Tree<AIPlayer>
+        (
+            new Sequence<AIPlayer>(
+                new Not<AIPlayer>(new HasRandomPosition()),
+                new GetRandomPosition(),
+                new Not<AIPlayer>(new HasReachedRandomPosition())
+            )
+        );
         var chaseBallTree = new Tree<AIPlayer>
         (
             new Sequence<AIPlayer>(
@@ -162,6 +176,7 @@ public class AIPlayer : Player
                 kickBallTree,
                 approachGoalTree,
                 chaseBallTree,
+                gettingRandomPosTree,
                 new Meander()
             )
         );
@@ -193,10 +208,15 @@ public class AIPlayer : Player
         playerObject.transform.rotation = Quaternion.Slerp(playerObject.transform.rotation, lookRotation, 1);
     }
 
-    public void Meander()
+    public Vector3 GetRandomTarget()
     {
-        var target = new Vector3(Random.Range(-8, 8), playerObject.transform.position.y, Random.Range(-4, 4));
-        MoveTowards(target, 0.75f);
+        return new Vector3(Random.Range(-8, 8), playerObject.transform.position.y, Random.Range(-4, 4));
+    }
+
+    public void Meander(Vector3 target)
+    {
+        Debug.Log("current target: " + target);
+        MoveTowardsPosition(target, 0.75f);
     }
     
     public void ChaseBall(bool chase)
@@ -208,7 +228,7 @@ public class AIPlayer : Player
         }
         
         LookAt(ServicesLocator.Ball.gameObject);
-        MoveTowards(Direction(ServicesLocator.Ball.gameObject), 1.25f);
+        MoveInDirection(Direction(ServicesLocator.Ball.gameObject), 1.25f);
         exhaustionTimer += Time.deltaTime;
     }
 
@@ -222,7 +242,7 @@ public class AIPlayer : Player
         if (!moveTowardsGoal) return;
         
         LookAt(GetGoal());
-        MoveTowards(Direction(GetGoal()), 1.25f);
+        MoveInDirection(Direction(GetGoal()), 1.25f);
     }
 
     public void KickBall(bool kick, Vector3 direction, float power)
@@ -242,12 +262,46 @@ public class AIPlayer : Player
     }
 }
 
+public class GetRandomPosition : BehaviorTree.Node<AIPlayer>
+{
+    public override bool Update(AIPlayer context)
+    {
+        context.currentTarget = context.GetRandomTarget();
+        context.prevTarget = context.currentTarget;
+        //Debug.Log("Getting random position: " + context.currentTarget);
+        return true;
+    }
+}
+
+public class HasRandomPosition : BehaviorTree.Node<AIPlayer>
+{
+    public override bool Update(AIPlayer context)
+    {
+        //Debug.Log("Player has target: " + (context.currentTarget == context.prevTarget));
+        return context.currentTarget == context.prevTarget;
+    }
+}
+
+public class HasReachedRandomPosition : BehaviorTree.Node<AIPlayer>
+{
+    public override bool Update(AIPlayer context)
+    {
+        var tolerance = 0.01f;
+        var xDist = Mathf.Abs(context.playerObject.transform.position.x - context.currentTarget.x);
+        var zDist = Mathf.Abs(context.playerObject.transform.position.z - context.currentTarget.z);
+
+        Debug.Log(xDist + ", " + zDist);
+        Debug.Log("Reached target: " + (xDist <= tolerance && zDist <= tolerance));
+        return xDist <= tolerance && zDist <= tolerance;
+    }
+}
+
 public class Meander : BehaviorTree.Node<AIPlayer>
 {
     public override bool Update(AIPlayer context)
     {
-        Debug.Log("Player is aimlessly wandering around...");
-        context.Meander();
+        //Debug.Log("target: " + context.currentTarget);
+        context.Meander(context.currentTarget);
         return true;
     }
 }
@@ -263,7 +317,7 @@ public class FacingGoal : BehaviorTree.Node<AIPlayer>
         {
             if (hit.collider.gameObject == context.GetGoal())
             {
-                Debug.Log("Player is facing the goal!");
+                //Debug.Log("Player is facing the goal!");
                 return true;
             }
         }
@@ -283,7 +337,7 @@ public class KickBall : BehaviorTree.Node<AIPlayer>
     
     public override bool Update(AIPlayer context)
     {
-        Debug.Log("Player is kicking the ball!");
+        //Debug.Log("Player is kicking the ball!");
         context.KickBall(kick, context.Direction(context.GetGoal()), 1.5f);
         return true;
     }
@@ -293,7 +347,7 @@ public class HasBall : BehaviorTree.Node<AIPlayer>
 {
     public override bool Update(AIPlayer context)
     {
-        Debug.Log("Player has the ball: " + ServicesLocator.Ball.transform.IsChildOf(context.playerObject.transform));
+        //Debug.Log("Player has the ball: " + ServicesLocator.Ball.transform.IsChildOf(context.playerObject.transform));
         return ServicesLocator.Ball.transform.IsChildOf(context.playerObject.transform);
     }
 }
@@ -309,7 +363,7 @@ public class MoveTowardsGoal : BehaviorTree.Node<AIPlayer>
     
     public override bool Update(AIPlayer context)
     {
-        Debug.Log("Player is moving towards the goal!");
+        //Debug.Log("Player is moving towards the goal!");
         context.MoveTowardsGoal(moveTowardsGoal);
         return true;
     }
@@ -327,7 +381,7 @@ public class BallInRange : BehaviorTree.Node<AIPlayer>
     public override bool Update(AIPlayer context)
     {
         var distance = Vector3.Distance(context.playerObject.transform.position, ServicesLocator.Ball.transform.position);
-        Debug.Log("Ball in range: " + (distance < range));
+        //Debug.Log("Ball in range: " + (distance < range));
         return distance < range;
     }
 }
@@ -336,7 +390,7 @@ public class NotExhausted : BehaviorTree.Node<AIPlayer>
 {
     public override bool Update(AIPlayer context)
     {
-        Debug.Log("Player not exhausted: " + (context.exhaustionTimer < context.timeToExhaustion));
+        //Debug.Log("Player not exhausted: " + (context.exhaustionTimer < context.timeToExhaustion));
         return context.exhaustionTimer < context.timeToExhaustion;
     }
 }
@@ -351,7 +405,7 @@ public class ChaseBall : BehaviorTree.Node<AIPlayer>
     
     public override bool Update(AIPlayer context)
     {
-        Debug.Log("Player is chasing the ball!");
+        //Debug.Log("Player is chasing the ball!");
         context.ChaseBall(chase);
         return true;
     }
@@ -416,7 +470,7 @@ public class WatchBall : RefereeState
 
     public override void Update()
     {
-        Context.MoveTowards(Context.Direction(), Context.speed);
+        Context.MoveInDirection(Context.Direction(), Context.speed);
     }
 }
 
@@ -431,7 +485,7 @@ public class BlowWhistle : RefereeState
     {
         foreach (var player in ServicesLocator.PlayerManager._players)
         {
-            player.MoveTowards(-player.Direction(), 1.5f);
+            player.MoveInDirection(-player.Direction(), 1.5f);
         }
     }
 }
