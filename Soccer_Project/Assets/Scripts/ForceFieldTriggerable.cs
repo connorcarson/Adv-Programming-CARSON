@@ -5,40 +5,26 @@ using UnityEngine;
 
 public class ForceFieldTriggerable : MonoBehaviour
 {
-    [HideInInspector] public float forceFieldRange = 1.0f;
-    [HideInInspector] public float hitForce = 500f;
+    [HideInInspector] public float forceFieldRange, hitForce, forceFieldDuration;
+    [HideInInspector] public Vector3 forceFieldMaxScale;
+    [HideInInspector] public SpriteRenderer forceField_sr;
+    [HideInInspector] public AudioSource audioSource;
     
-    private SpriteRenderer forceField_sr;
-    private Vector3 forceFieldDefaultScale, forceFieldMaxScale;
-    private float forceFieldDuration = 0.2f;
+    private Vector3 forceFieldDefaultScale;
     private float timeElapsed;
     private int targetLayer = 1 << 8;
 
-
-    public void Start()
-    {
-        Initialize();
-    }
-
     public void Initialize()
     {
+        audioSource = GetComponent<AudioSource>();
         forceField_sr = GetComponentInChildren<SpriteRenderer>();
-        forceFieldMaxScale = new Vector3(3.0f, 3.0f, 3.0f);
         forceFieldDefaultScale = forceField_sr.transform.localScale;
-    }
-    
-    public void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Trigger();
-        }
     }
 
     public void Trigger()
     {
         StartCoroutine(FieldEffect());
-        
+
         var enemiesInRange = EnemiesInRange();
 
         if (enemiesInRange.Length <= 0) return;

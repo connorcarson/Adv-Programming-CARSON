@@ -45,7 +45,7 @@ public class PlayerController
         
         for (var i = 0; i < _numberOfPlayers - 1; i++)
         {
-            var aiObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/AI_Player"));
+            var aiObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/NPC"));
             
             var aiPlayer = new AIPlayer(aiObject, Player.Team.Blue, 0.8f);
             aiPlayer.SetPosition();
@@ -54,14 +54,14 @@ public class PlayerController
 
         for (var i = 0; i < _numberOfPlayers; i++)
         {
-            var aiObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/AI_Player"));
+            var aiObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/NPC"));
 
             var aiPlayer = new AIPlayer(aiObject, Player.Team.Orange, 0.8f);
             aiPlayer.SetPosition();
             _players.Add(aiPlayer);
         }
 
-        var refereeObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/AI_Player"));
+        var refereeObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/NPC"));
         
         _referee = new Referee(refereeObject, Player.Team.Referee, 1.5f);
     }

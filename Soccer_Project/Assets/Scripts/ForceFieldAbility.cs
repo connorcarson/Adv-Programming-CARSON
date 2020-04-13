@@ -5,17 +5,29 @@ using UnityEngine;
 [CreateAssetMenu (menuName = "Abilities/ForceFieldAbility")]
 public class ForceFieldAbility : Ability
 {
-    public float forceFieldRange = 1.0f;
-    public float hitForce = 10f;
-    public Color forceFieldColor = Color.white;
+    public float forceFieldRange;
+    public float hitForce;
+    public float forceFieldDuration;
+    public Vector3 forceFieldMaxScale;
+    
+    private ForceFieldTriggerable forceField;
 
     public override void Initialize(GameObject obj)
     {
-        throw new System.NotImplementedException();
+        forceField = obj.GetComponent<ForceFieldTriggerable>();
+        forceField.Initialize();
+        
+        forceField.forceFieldRange = this.forceFieldRange;
+        forceField.hitForce = this.hitForce;
+        forceField.forceFieldDuration = this.forceFieldDuration;
+        forceField.forceFieldMaxScale = this.forceFieldMaxScale;
+        forceField.forceField_sr.sprite = this.abilityEffectSprite;
+        forceField.forceField_sr.color = this.abilityColor;
     }
 
     public override void TriggerAbility()
     {
-        throw new System.NotImplementedException();
+        forceField.Trigger();
+        forceField.audioSource.PlayOneShot(abilitySound);
     }
 }

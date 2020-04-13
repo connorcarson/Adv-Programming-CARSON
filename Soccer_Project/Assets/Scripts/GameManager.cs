@@ -18,11 +18,12 @@ public class GameManager : MonoBehaviour
         ServicesLocator.EventManager = new EventManager();
         ServicesLocator.PlayerManager = new PlayerController();
         ServicesLocator.BoundaryController = new Boundaries();
+        
+        ServicesLocator.EventManager.Register<GameStarted>(ServicesLocator.PlayerManager.Initialize);
     }
 
     private void Start()
     {
-        ServicesLocator.EventManager.Register<GameStarted>(ServicesLocator.PlayerManager.Initialize);
         ServicesLocator.EventManager.Register<GameStarted>(DisableTitleScreen);
         ServicesLocator.EventManager.Register<GameStarted>((AGPEvent e) => { _gameBegun = true; });
         

@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Goal
   - Ball
+  - NPC
   layers:
   - Default
   - TransparentFX
