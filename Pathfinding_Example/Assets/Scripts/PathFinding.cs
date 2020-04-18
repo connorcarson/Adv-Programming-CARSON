@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 public class PathFinding : MonoBehaviour
 {
@@ -17,11 +19,17 @@ public class PathFinding : MonoBehaviour
 
     private void Update()
     {
-        FindPath(_seeker.position, _target.position);
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            FindPath(_seeker.position, _target.position);
+        }
+        //FindPath(_seeker.position, _target.position);
     }
 
     private void FindPath(Vector3 startPosition, Vector3 targetPosition)
     {
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
         Node startNode = _gridManager.NodeFromWorldPoint(startPosition);
         Node targetNode = _gridManager.NodeFromWorldPoint(targetPosition);
         
@@ -46,6 +54,8 @@ public class PathFinding : MonoBehaviour
             closedSet.Add(currentNode);
 
             if (currentNode == targetNode) { //found path
+                sw.Stop();
+                Debug.Log("Path found: " + sw.ElapsedMilliseconds + " ms");
                 RetracePath(startNode, targetNode);
                 return;
             }

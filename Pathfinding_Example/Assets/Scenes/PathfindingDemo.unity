@@ -693,7 +693,7 @@ Transform:
   m_GameObject: {fileID: 1240593448}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 3, y: 1, z: 3}
   m_Children:
   - {fileID: 817526312}
   - {fileID: 1964034000}
@@ -792,7 +792,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1310703608}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -12.17, y: 1, z: 12.2}
+  m_LocalPosition: {x: -45.7, y: 1, z: 13.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -886,7 +886,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1351969426}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalPosition: {x: 36, y: 1, z: -37.4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -923,11 +923,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _player: {fileID: 1351969430}
-  _gridWorldSize: {x: 30, y: 30}
+  _gridWorldSize: {x: 100, y: 100}
   _nodeRadius: 0.5
   _unwalkableLayer:
     serializedVersion: 2
     m_Bits: 256
+  _onlyDisplayPathGizmos: 0
 --- !u!4 &1591625409
 Transform:
   m_ObjectHideFlags: 0
@@ -1138,7 +1139,7 @@ Transform:
   m_GameObject: {fileID: 1767142566}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalScale: {x: 10, y: 10, z: 10}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
