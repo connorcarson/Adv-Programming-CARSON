@@ -20,6 +20,13 @@ public class GridManager : MonoBehaviour
     [SerializeField] 
     private bool _onlyDisplayPathGizmos;
 
+    [SerializeField] 
+    private TerrainType[] walkableRegions;
+
+    private LayerMask walkableMask;
+
+    private Dictionary<int, int> walkableRegionDictionary = new Dictionary<int, int>();
+
     private Node[,] _grid;
 
     private float _nodeDiameter;
@@ -37,6 +44,11 @@ public class GridManager : MonoBehaviour
         _nodeDiameter = _nodeRadius * 2;
         _gridWidth = Mathf.RoundToInt(_gridWorldSize.x / _nodeDiameter);
         _gridHeight =  Mathf.RoundToInt(_gridWorldSize.y / _nodeDiameter);
+
+        foreach (TerrainType region in walkableRegions) {
+            walkableMask |= region.terrainMask.value;
+            walkableRegionDictionary.Add((int)Math.Log(region.terrainMask.value, 2), region.terrainPenalty);
+        }
         
         CreateGrid();
     }
@@ -68,8 +80,7 @@ public class GridManager : MonoBehaviour
                 var checkX = node.gridX + x;
                 var checkY = node.gridY + y;
 
-                if (checkX >= 0 && checkX < _gridWidth && checkY >= 0 && checkY < _gridHeight)
-                {
+                if (checkX >= 0 && checkX < _gridWidth && checkY >= 0 && checkY < _gridHeight) {
                     neighbors.Add(_grid[checkX, checkY]);
                 }
             }
@@ -92,10 +103,28 @@ public class GridManager : MonoBehaviour
                                      Vector3.forward * (y * _nodeDiameter + _nodeRadius);
 
                 bool walkable = !Physics.CheckSphere(worldPoint, _nodeRadius, _unwalkableLayer);
+
+                int movementPenalty = 0;
+
+                if (walkable) {
+                    Ray ray = new Ray(worldPoint + Vector3.up * 50.0f, Vector3.down);
+                    RaycastHit hit;
+
+                    if (Physics.Raycast(ray, out hit, 100f, walkableMask)) {
+                        walkableRegionDictionary.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);
+                    }
+                }
                 
-                _grid[x, y] = new Node(walkable, worldPoint, x, y);
+                _grid[x, y] = new Node(walkable, worldPoint, x, y, movementPenalty);
             }
         }
+    }
+
+    [System.Serializable] 
+    public class TerrainType
+    {
+        public LayerMask terrainMask;
+        public int terrainPenalty;
     }
 
     [HideInInspector]

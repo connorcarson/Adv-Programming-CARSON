@@ -33,24 +33,14 @@ public class PathFinding : MonoBehaviour
         Node startNode = _gridManager.NodeFromWorldPoint(startPosition);
         Node targetNode = _gridManager.NodeFromWorldPoint(targetPosition);
         
-        List<Node> openSet = new List<Node>();
+        Heap<Node> openSet = new Heap<Node>(_gridManager.MaxSize);
         HashSet<Node> closedSet = new HashSet<Node>();
         openSet.Add(startNode);
 
         while (openSet.Count > 0) {
             
-            Node currentNode = openSet[0];
+            Node currentNode = openSet.RemoveFirst();
             
-            for (var i = 1; i < openSet.Count; i++) {
-                
-                if (openSet[i].fCost < currentNode.fCost || openSet[i].fCost == currentNode.fCost) {
-                    if(openSet[i].hCost < currentNode.hCost) {
-                        currentNode = openSet[i];
-                    }
-                }
-            }
-
-            openSet.Remove(currentNode);
             closedSet.Add(currentNode);
 
             if (currentNode == targetNode) { //found path
@@ -64,7 +54,7 @@ public class PathFinding : MonoBehaviour
             {
                 if(!neighbor.walkable || closedSet.Contains(neighbor)) continue;
 
-                int newCostToNeighbor = currentNode.gCost + DistanceBetweenNodes(currentNode, neighbor);
+                int newCostToNeighbor = currentNode.gCost + DistanceBetweenNodes(currentNode, neighbor) + neighbor.movementPenalty;
 
                 if (newCostToNeighbor < neighbor.gCost || !openSet.Contains(neighbor))
                 {
@@ -72,7 +62,13 @@ public class PathFinding : MonoBehaviour
                     neighbor.hCost = DistanceBetweenNodes(neighbor, targetNode);
                     neighbor.parent = currentNode;
 
-                    if (!openSet.Contains(neighbor)) openSet.Add(neighbor);
+                    if (!openSet.Contains(neighbor)) {
+                        openSet.Add(neighbor);
+                    }
+                    else {
+                        openSet.UpdateItem(neighbor);
+                    }
+                    
                 }
             }
         }
