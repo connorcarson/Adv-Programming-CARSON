@@ -50,15 +50,15 @@ public class GridManager : MonoBehaviour
     {
         List<Node> neighbors = new List<Node>();
 
-        for (var x = -1; x < 1; x++) {
-            for (var y = -1; y < 1; y++) {
+        for (var x = -1; x <= 1; x++) {
+            for (var y = -1; y <= 1; y++) {
                 
                 if(x == 0 && y == 0) continue;
 
                 var checkX = node.gridX + x;
                 var checkY = node.gridY + y;
 
-                if (checkX >= 0 && checkX < _gridWidth && checkY >= y && checkY < _gridHeight)
+                if (checkX >= 0 && checkX < _gridWidth && checkY >= 0 && checkY < _gridHeight)
                 {
                     neighbors.Add(_grid[checkX, checkY]);
                 }
@@ -87,7 +87,9 @@ public class GridManager : MonoBehaviour
             }
         }
     }
-    
+
+    [HideInInspector]
+    public List<Node> path;
     
     private void OnDrawGizmos()
     {
@@ -101,7 +103,11 @@ public class GridManager : MonoBehaviour
                 
                 Gizmos.color = (n.walkable) ? Color.white : Color.red;
                 if(playerNode == n) Gizmos.color = Color.cyan;
-                
+
+                if (path != null) {
+                    if (path.Contains(n)) Gizmos.color = Color.black;
+                }
+
                 Gizmos.DrawCube(n.worldPosition, Vector3.one * (_nodeDiameter - 0.1f));
             }
         }

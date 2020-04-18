@@ -15,6 +15,8 @@ public class Node
     {
         get { return gCost + hCost; }
     }
+    
+    public Node parent;
 
     public Node(bool walkable, Vector3 worldPosition, int gridX, int gridY)
     {
