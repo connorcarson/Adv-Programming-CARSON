@@ -17,20 +17,27 @@ public class GridManager : MonoBehaviour
     [SerializeField] 
     private LayerMask _unwalkableLayer;
 
-    [SerializeField] 
-    private bool _onlyDisplayPathGizmos;
+    public GizmoSettings _gizmoSettings;
+    public enum GizmoSettings
+    {
+        DisplayAllGridGizmos,
+        OnlyDisplayGridPathGizmos,
+        OnlyDisplaySimplifiedPathGizmos
+    }
 
     [SerializeField] 
     private TerrainType[] walkableRegions;
 
     private LayerMask walkableMask;
 
-    private Dictionary<int, int> walkableRegionDictionary = new Dictionary<int, int>();
+    private Dictionary<int, int> _walkableRegionDictionary = new Dictionary<int, int>();
 
     private Node[,] _grid;
 
     private float _nodeDiameter;
     private int _gridWidth, _gridHeight;
+
+    public static GridManager instance;
 
     public int MaxSize
     {
@@ -39,15 +46,17 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    private void Start()
+    private void Awake()
     {
+        instance = this;
+        
         _nodeDiameter = _nodeRadius * 2;
         _gridWidth = Mathf.RoundToInt(_gridWorldSize.x / _nodeDiameter);
         _gridHeight =  Mathf.RoundToInt(_gridWorldSize.y / _nodeDiameter);
 
         foreach (TerrainType region in walkableRegions) {
             walkableMask |= region.terrainMask.value;
-            walkableRegionDictionary.Add((int)Math.Log(region.terrainMask.value, 2), region.terrainPenalty);
+            _walkableRegionDictionary.Add((int)Math.Log(region.terrainMask.value, 2), region.terrainPenalty);
         }
         
         CreateGrid();
@@ -111,7 +120,7 @@ public class GridManager : MonoBehaviour
                     RaycastHit hit;
 
                     if (Physics.Raycast(ray, out hit, 100f, walkableMask)) {
-                        walkableRegionDictionary.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);
+                        _walkableRegionDictionary.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);
                     }
                 }
                 
@@ -128,39 +137,37 @@ public class GridManager : MonoBehaviour
     }
 
     [HideInInspector]
-    public List<Node> path;
+    public List<List<Node>> paths = new List<List<Node>>();
     
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(_gridWorldSize.x, 1, _gridWorldSize.y));
 
-        if (_onlyDisplayPathGizmos) {
-            if (path != null) {
-                foreach (Node n in path)
-                {
+        if (_gizmoSettings == GizmoSettings.OnlyDisplayGridPathGizmos)
+        {
+            if (paths == null) return;
+            foreach (var path in paths) {
+                foreach (Node n in path) {
                     if (path.Contains(n)) Gizmos.color = Color.black;
+                        
                     Gizmos.DrawCube(n.worldPosition, Vector3.one * (_nodeDiameter - 0.1f));
                 }
             }
         }
-        else
+        else if(_gizmoSettings == GizmoSettings.DisplayAllGridGizmos)
         {
-            if (_grid != null) {
+            if (_grid == null) return;
             
-                Node playerNode = NodeFromWorldPoint(_player.position);
-            
-                foreach (Node n in _grid) {
-                
-                    Gizmos.color = (n.walkable) ? Color.white : Color.red;
-                    if(playerNode == n) Gizmos.color = Color.cyan;
-
-                    if (path != null) {
+            foreach (Node n in _grid) {
+                Gizmos.color = (n.walkable) ? Color.white : Color.red;
+                if (paths != null) {
+                    foreach (var path in paths) {
                         if (path.Contains(n)) Gizmos.color = Color.black;
                     }
-
-                    Gizmos.DrawCube(n.worldPosition, Vector3.one * (_nodeDiameter - 0.1f));
                 }
-            }   
+                
+                Gizmos.DrawCube(n.worldPosition, Vector3.one * (_nodeDiameter - 0.1f));
+            }
         }
     }
 }
