@@ -46,7 +46,7 @@ public class Unit : MonoBehaviour
 
     public void OnDrawGizmos()
     {
-        //if (GridManager.instance._gizmoSettings != GridManager.GizmoSettings.OnlyDisplaySimplifiedPathGizmos) return;
+        if (GridManager.instance._gizmoSettings != GridManager.GizmoSettings.OnlyDisplaySimplifiedPathGizmos) return;
 
         if (_path == null) return;
         
